@@ -1,6 +1,6 @@
 import { ComplementConverter } from './complementConverter'
 
-describe('getComplement tests', () => {
+describe('getPositiveComplement tests', () => {
   let conv = new ComplementConverter()
   it('returns valid complement for positive number', () => {
     let input = '200'
@@ -29,7 +29,10 @@ describe('getComplement tests', () => {
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
+})
 
+describe('getNegativeComplement tests', () => {
+  let conv = new ComplementConverter()
   it('returns valid complement for negative number', () => {
     let input = '-200'
     let radix = 10
@@ -60,6 +63,28 @@ describe('getComplement tests', () => {
   })
 })
 
+describe('getComplement tests', () => {
+  let conv = new ComplementConverter()
+  it('returns valid complement for positive number', () => {
+    let input = '200'
+    let radix = 10
+    let expected = '200.0'
+    let expectedPrefix = '(0)'
+    let actual = conv.getComplement(input, radix)
+    expect(actual.valueStr).toEqual(expected)
+    expect(actual.prefix).toEqual(expectedPrefix)
+  })
+  it('returns valid complement for negative number', () => {
+    let input = '-200'
+    let radix = 10
+    let expected = '800.0'
+    let expectedPrefix = '(9)'
+    let actual = conv.getComplement(input, radix)
+    expect(actual.valueStr).toEqual(expected)
+    expect(actual.prefix).toEqual(expectedPrefix)
+  })
+})
+
 describe('removeDelimiter tests', () => {
   let conv = new ComplementConverter()
   it('removes delimiter and returns tuple with string and delimiter index', () => {
@@ -67,16 +92,25 @@ describe('removeDelimiter tests', () => {
     let radix = 10
     let expectedStr = '20022'
     let expectedIndex = 3
-    let actual = conv.removeDelimiter(input, radix)
+    let actual = ComplementConverter.removeDelimiter(input, radix)
     expect(actual[0]).toEqual(expectedStr)
     expect(actual[1]).toEqual(expectedIndex)
   })
-  it('does not modify string without delimeter', () => {
+  it('removes delimiter and returns tuple with string and delimiter index when radix > 36', () => {
+    let input = '20 32.56'
+    let radix = 64
+    let expectedStr = '20 32 56'
+    let expectedIndex = 5
+    let actual = ComplementConverter.removeDelimiter(input, radix)
+    expect(actual[0]).toEqual(expectedStr)
+    expect(actual[1]).toEqual(expectedIndex)
+  })
+  it('does not modify string without delimiter', () => {
     let input = '20023'
     let radix = 10
     let expectedStr = '20023'
     let expectedIndex = input.length - 1
-    let actual = conv.removeDelimiter(input, radix)
+    let actual = ComplementConverter.removeDelimiter(input, radix)
     expect(actual[0]).toEqual(expectedStr)
     expect(actual[1]).toEqual(expectedIndex)
   })
@@ -89,19 +123,26 @@ describe('restoreDelimiter tests', () => {
     let radix = 10
     let index = 3
     let expectedStr = '200.22'
-    let actual = conv.restoreDelimiter(input, radix, index)
+    let actual = ComplementConverter.restoreDelimiter(input, radix, index)
+    expect(actual).toEqual(expectedStr)
+  })
+  it('restores delimiter at previous index when radix > 36', () => {
+    let input = '20 32 45 54'
+    let radix = 64
+    let index = 8
+    let expectedStr = '20 32 45.54'
+    let actual = ComplementConverter.restoreDelimiter(input, radix, index)
     expect(actual).toEqual(expectedStr)
   })
 })
 
 describe('toDigitList tests', () => {
-  let conv = new ComplementConverter()
   it('splits valueStr into arr and returns tuple with arr and delimeter index', () => {
     let input = '200.22'
     let radix = 10
     let index = 3
     let expectedArr = ['2', '0', '0', '2', '2']
-    let actual = conv.toDigitList(input, radix)
+    let actual = ComplementConverter.toDigitList(input, radix)
     expect(actual[0]).toEqual(expectedArr)
     expect(actual[1]).toEqual(index)
   })
@@ -111,10 +152,38 @@ describe('isNegative tests', () => {
   let conv = new ComplementConverter()
   it('returns true if valueStr is negative', () => {
     let input = '-200.22'
-    expect(conv.IsNegative(input)).toBeTruthy()
+    expect(ComplementConverter.IsNegative(input)).toBeTruthy()
   })
   it('returns false if valueStr is positive', () => {
     let input = '200.22'
-    expect(conv.IsNegative(input)).toBeFalsy()
+    expect(ComplementConverter.IsNegative(input)).toBeFalsy()
+  })
+})
+describe('incrementNumber tests', () => {
+  let conv = new ComplementConverter(10)
+  it('increments number when radix is < 36 and there is no propagation', () => {
+    let input = ['7', '8', '9', '2', '3', '4']
+    let radix = 10
+    let expected = '789235'
+    expect(conv.incrementNumber(input, radix)).toEqual(expected)
+  })
+  it('increments number when radix is < 36 and with propagation', () => {
+    let input = ['7', '8', '9', '2', '9', '9']
+    let radix = 10
+    let expected = '789300'
+    expect(conv.incrementNumber(input, radix)).toEqual(expected)
+  })
+  it('increments number when radix is > 36 and there is no propagation', () => {
+    let input = ['10', '48', '29', '42', '23', '44']
+    let radix = 64
+    let expected = '10 48 29 42 23 45'
+    let actual = conv.incrementNumber(input, radix)
+    expect(actual).toEqual(expected)
+  })
+  it('increments number when radix is > 36 and with propagation', () => {
+    let input = ['10', '48', '29', '63', '63', '63']
+    let radix = 64
+    let expected = '10 48 30 00 00 00'
+    expect(conv.incrementNumber(input, radix)).toEqual(expected)
   })
 })
