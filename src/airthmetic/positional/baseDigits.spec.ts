@@ -70,10 +70,10 @@ describe('GetDigit tests', () => {
   })
   it('returns undefined if requested value is not in object', () => {
     let bd = new BaseDigits(10)
-    expect(bd.getValue('AAA')).toBe(undefined)
+    expect(bd.getValue('AAA')).toBe(-1)
   })
   it('returns undefined if requested value is equal to radix (not in object)', () => {
     let bd = new BaseDigits(10)
-    expect(bd.getValue('10')).toBe(undefined)
+    expect(bd.getValue('10')).toBe(-1)
   })
 })
