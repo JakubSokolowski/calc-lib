@@ -21,14 +21,12 @@ export class BaseDigits {
     for (let i = 0; i <= 36; i++) {
       this.digitValuesUpToRadix36[this.defaultDigits.charAt(i)] = i
     }
-    if (this.currentRadix > 36) {
-      for (let i = 0; i <= this.currentRadix; i++) {
-        let key = i.toString()
-        if (i < 10) {
-          key = '0' + key
-        }
-        this.digitValues[key] = i
+    for (let i = 0; i <= this.MAX_RADIX; i++) {
+      let key = i.toString()
+      if (i < 10) {
+        key = '0' + key
       }
+      this.digitValues[key] = i
     }
   }
 
@@ -44,7 +42,9 @@ export class BaseDigits {
         return this.getKeyByValue(this.digitValues, value)
       }
     }
-    throw new Error('The digit is not in range 0 - ' + (this.currentRadix - 1).toString())
+    throw new Error(
+      'The value ' + value + ' is not in range 0 - ' + (this.currentRadix - 1).toString()
+    )
   }
 
   getValue(key: string): number {

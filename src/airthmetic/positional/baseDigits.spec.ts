@@ -27,15 +27,35 @@ describe('GetDigit sub 36 radix test', () => {
 })
 
 describe('GetDigit above 36 radix test', () => {
-  it('Returns proper digit for value 10 in base 64', () => {
+  it('returns proper digit for value 10 in base 64', () => {
     let bd = new BaseDigits(64)
     expect(bd.getDigit(10)).toBe('10')
+  })
+  it('adds zero before sub-10 digits in base 64', () => {
+    let bd = new BaseDigits(64)
+    expect(bd.getDigit(8)).toBe('08')
+  })
+  it('returns proper digit for value 63 in base 64', () => {
+    let bd = new BaseDigits(64)
+    expect(bd.getDigit(63)).toBe('63')
+  })
+  it('throws error, if requested digit is equal to radix', () => {
+    let bd = new BaseDigits(64)
+    expect(function() {
+      let digit = bd.getDigit(64)
+    }).toThrow()
   })
   it('throws error, if requested digit is greater than radix', () => {
     let bd = new BaseDigits(64)
     expect(function() {
       let digit = bd.getDigit(65)
     }).toThrow()
+  })
+  it('returns proper digits after radix change from 10 to 64', () => {
+    let bd = new BaseDigits(10)
+    expect(bd.getDigit(9)).toBe('9')
+    bd.currentRadix = 64
+    expect(bd.getDigit(63)).toBe('63')
   })
 })
 
