@@ -21,3 +21,16 @@ export function removeTrailingZerosAndSpaces(str: string): string {
   }
   return str
 }
+
+export function replaceAll(str: string, toReplace: string, replacement: string): string {
+  str = str.replace(new RegExp(toReplace, 'g'), replacement)
+  return str
+}
+
+export function prependZeros(str: string, desiredLength: number): string {
+  if (str.length > desiredLength) {
+    return str
+  }
+  let count = desiredLength - str.length
+  return '0'.repeat(count) + str
+}
