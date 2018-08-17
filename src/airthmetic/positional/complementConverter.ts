@@ -1,13 +1,17 @@
 import { BaseDigits } from './baseDigits'
 import { representationStrToStrList } from '../conversionHelpers'
 
-class BaseComplement {
+export class BaseComplement {
   valueStr: string
   prefix: string
 
   constructor(value: string, prefix: string) {
     this.valueStr = value
     this.prefix = prefix
+  }
+
+  toString(): string {
+    return this.prefix + this.valueStr
   }
 }
 

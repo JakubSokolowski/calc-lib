@@ -1,4 +1,4 @@
-import { ComplementConverter } from './complementConverter'
+import { ComplementConverter, BaseComplement } from './complementConverter'
 
 describe('getPositiveComplement tests', () => {
   let conv = new ComplementConverter()
@@ -33,7 +33,7 @@ describe('getPositiveComplement tests', () => {
 
 describe('getNegativeComplement tests', () => {
   let conv = new ComplementConverter()
-  it('returns valid complement for negative number', () => {
+  it('returns valid complement for base 10 negative number', () => {
     let input = '-200'
     let radix = 10
     let expected = '800.0'
@@ -42,7 +42,7 @@ describe('getNegativeComplement tests', () => {
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
-  it('returns valid complement for negative number with 0 floating part', () => {
+  it('returns valid complement for base 10 negative number with 0 floating part', () => {
     let input = '-200.0'
     let radix = 10
     let expected = '800.0'
@@ -52,7 +52,16 @@ describe('getNegativeComplement tests', () => {
     expect(actual.prefix).toEqual(expectedPrefix)
   })
 
-  it('returns valid complement for negative floating number', () => {
+  it('returns valid complement for base 10 negative floating number', () => {
+    let input = '-11001.1'
+    let radix = 2
+    let expected = '00110.1'
+    let expectedPrefix = '(1)'
+    let actual = conv.getNegativeNumberComplement(input, radix)
+    expect(actual.valueStr).toEqual(expected)
+    expect(actual.prefix).toEqual(expectedPrefix)
+  })
+  it('returns valid complement for base 2 negative floating number', () => {
     let input = '-200.73'
     let radix = 10
     let expected = '799.27'
@@ -185,5 +194,14 @@ describe('incrementNumber tests', () => {
     let radix = 64
     let expected = '10 48 30 00 00 00'
     expect(conv.incrementNumber(input, radix)).toEqual(expected)
+  })
+})
+
+describe('toString tests', () => {
+  it('concats value and prefix', () => {
+    let value = '100101.11'
+    let prefix = '(0)'
+    let complement = new BaseComplement(value, prefix)
+    expect(complement.toString()).toEqual(prefix + value)
   })
 })
