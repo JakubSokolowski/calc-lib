@@ -3,7 +3,7 @@ export class BaseDigits {
   readonly MAX_RADIX: number = 99
   readonly defaultDigits: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-  constructor(radix: number) {
+  constructor(radix: number = 10) {
     if (!this.isValidRadix(radix)) {
       throw new Error('Radix must be between 2 and ' + this.MAX_RADIX)
     }
