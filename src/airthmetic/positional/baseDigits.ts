@@ -1,31 +1,27 @@
 export class BaseDigits {
-  currentRadix: number = 10
-  readonly MAX_RADIX: number = 99
-  readonly defaultDigits: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  static readonly MAX_RADIX: number = 99
+  static readonly defaultDigits: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-  constructor(radix: number = 10) {
-    if (!this.isValidRadix(radix)) {
-      throw new Error('Radix must be between 2 and ' + this.MAX_RADIX)
-    }
-    this.currentRadix = radix
-  }
-  isValidRadix(radix: number): boolean {
+  static isValidRadix(radix: number): boolean {
     return radix >= 2 && radix <= this.MAX_RADIX
   }
-  getDigit(value: number): string {
-    if (value < this.currentRadix) {
-      if (this.currentRadix <= 36) {
+
+  static getDigit(value: number, radix: number): string {
+    if (!this.isValidRadix(radix)) {
+      throw new Error('Radix must be between 2 and ')
+    }
+    if (value < radix) {
+      if (radix <= 36) {
         return this.defaultDigits[value]
       }
       return value < 10 ? '0' + value.toString() : value.toString()
     }
-    throw new Error(
-      'The value ' + value + ' is not in range 0 - ' + (this.currentRadix - 1).toString()
-    )
+    throw new Error('The value ' + value + ' is not in range 0 - ' + (radix - 1).toString())
   }
-  getValue(key: string): number {
+
+  static getValue(key: string, radix: number): number {
     let value = 0
-    if (this.currentRadix <= 36) {
+    if (radix <= 36) {
       value = this.defaultDigits.indexOf(key)
     } else {
       value = parseInt(key, 10)
