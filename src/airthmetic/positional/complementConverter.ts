@@ -16,12 +16,6 @@ export class BaseComplement {
 }
 
 export class ComplementConverter {
-  repDigits = new BaseDigits(10)
-
-  constructor(radix: number = 10) {
-    this.repDigits = new BaseDigits(radix)
-  }
-
   static toDigitList(valueStr: string, radix: number): [string[], number] {
     let val = ComplementConverter.removeDelimiter(valueStr, radix)
     let digitList = representationStrToStrList(val[0], radix)
@@ -61,7 +55,7 @@ export class ComplementConverter {
     return str
   }
 
-  getComplement(valueStr: string, radix: number): BaseComplement {
+  static getComplement(valueStr: string, radix: number): BaseComplement {
     if (ComplementConverter.IsNegative(valueStr)) {
       return this.getNegativeNumberComplement(valueStr, radix)
     } else {
@@ -69,55 +63,51 @@ export class ComplementConverter {
     }
   }
 
-  getNegativeNumberComplement(valueStr: string, radix: number): BaseComplement {
-    this.repDigits.currentRadix = radix
+  static getNegativeNumberComplement(valueStr: string, radix: number): BaseComplement {
     let prefix = this.getPrefix(valueStr, radix)
     let noSignValue = valueStr.substr(1)
     let suffix = this.getSuffix(valueStr, radix)
 
     let strArr = ComplementConverter.toDigitList(noSignValue, radix)
-    let complement = this.calculateComplement(strArr[0], radix)
+    let complement = ComplementConverter.calculateComplement(strArr[0], radix)
     if (!suffix) {
       complement = ComplementConverter.restoreDelimiter(complement, radix, strArr[1])
     }
     return new BaseComplement(complement + suffix, prefix)
   }
 
-  getPositiveNumberComplement(valueStr: string, radix: number): BaseComplement {
+  static getPositiveNumberComplement(valueStr: string, radix: number): BaseComplement {
     let prefix = this.getPrefix(valueStr, radix)
     let suffix = this.getSuffix(valueStr, radix)
     return new BaseComplement(valueStr + suffix, prefix)
   }
 
-  getSuffix(valueStr: string, radix: number): string {
-    this.repDigits.currentRadix = radix
+  static getSuffix(valueStr: string, radix: number): string {
     if (ComplementConverter.HasDelimiter(valueStr)) {
       return ''
     }
-    return '.' + this.repDigits.getDigit(0)
+    return '.' + BaseDigits.getDigit(0, radix)
   }
 
-  getPrefix(valueStr: string, radix: number): string {
-    this.repDigits.currentRadix = radix
+  static getPrefix(valueStr: string, radix: number): string {
     if (ComplementConverter.IsNegative(valueStr)) {
-      return '(' + this.repDigits.getDigit(radix - 1) + ')'
+      return '(' + BaseDigits.getDigit(radix - 1, radix) + ')'
     } else {
-      return '(' + this.repDigits.getDigit(0) + ')'
+      return '(' + BaseDigits.getDigit(0, radix) + ')'
     }
   }
 
-  getDigitComplement(digit: string, radix: number): string {
-    return this.repDigits.getDigit(radix - 1 - this.repDigits.getValue(digit))
+  static getDigitComplement(digit: string, radix: number): string {
+    return BaseDigits.getDigit(radix - 1 - BaseDigits.getValue(digit, radix), radix)
   }
 
-  incrementNumber(digits: string[], radix: number): string {
-    this.repDigits.currentRadix = radix
+  static incrementNumber(digits: string[], radix: number): string {
     for (let i = digits.length - 1; i >= 0; i--) {
-      let val = this.repDigits.getValue(digits[i])
+      let val = BaseDigits.getValue(digits[i], radix)
       if (val === radix - 1) {
-        digits[i] = this.repDigits.getDigit(0)
+        digits[i] = BaseDigits.getDigit(0, radix)
       } else {
-        digits[i] = this.repDigits.getDigit(val + 1)
+        digits[i] = BaseDigits.getDigit(val + 1, radix)
         break
       }
     }
@@ -128,9 +118,9 @@ export class ComplementConverter {
     }
   }
 
-  calculateComplement(digits: string[], radix: number): string {
+  static calculateComplement(digits: string[], radix: number): string {
     for (let i = 0; i < digits.length; i++) {
-      digits[i] = this.getDigitComplement(digits[i], radix)
+      digits[i] = ComplementConverter.getDigitComplement(digits[i], radix)
     }
     return this.incrementNumber(digits, radix)
   }

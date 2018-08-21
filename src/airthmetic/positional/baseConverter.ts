@@ -27,31 +27,35 @@ export class BaseRepresentation {
 }
 
 export class BaseConverter {
-  formatPrecision: number = 30
-  digits: BaseDigits = new BaseDigits()
-  cc: ComplementConverter = new ComplementConverter()
-
-  fromBigNumber(num: BigNumber, resultBase: number): BaseRepresentation {
+  static fromBigNumber(num: BigNumber, resultBase: number, precision = 30): BaseRepresentation {
     let fractionVal = num.mod(1)
     let integerVal = num.minus(fractionVal)
-    let fractionStr = this.decimalFractionToArbitrary(fractionVal, resultBase)
-    let integerStr = this.decimalIntegralToArbitrary(integerVal, resultBase)
+    let fractionStr = BaseConverter.decimalFractionToArbitrary(fractionVal, resultBase, precision)
+    let integerStr = BaseConverter.decimalIntegralToArbitrary(integerVal, resultBase)
     let result = integerStr + '.' + fractionStr
-    let complement = this.cc.getComplement(result, resultBase)
+    let complement = ComplementConverter.getComplement(result, resultBase)
     return new BaseRepresentation(resultBase, num, result, complement)
   }
 
-  fromBaseRepresentation(num: BaseRepresentation, resultBase: number): BaseRepresentation {
-    return this.fromBigNumber(num.valueInDecimal, resultBase)
+  static fromBaseRepresentation(
+    num: BaseRepresentation,
+    resultBase: number,
+    precision = 30
+  ): BaseRepresentation {
+    return BaseConverter.fromBigNumber(num.valueInDecimal, resultBase, precision)
   }
 
-  fromValueString(valueStr: string, inputBase: number, resultBase: number): BaseRepresentation {
-    if (this.isValidString(valueStr, inputBase)) {
+  static fromValueString(
+    valueStr: string,
+    inputBase: number,
+    resultBase: number
+  ): BaseRepresentation {
+    if (BaseConverter.isValidString(valueStr, inputBase)) {
       let decimalValue = new BigNumber(0)
-      if (this.isFloatingPointStr(valueStr)) {
+      if (BaseConverter.isFloatingPointStr(valueStr)) {
         let valueParts = valueStr.split('.')
-        let integerPart = this.arbitraryIntegralToDecimal(valueParts[0], inputBase)
-        let fractionalPart = this.arbitraryFractionToDecimal(valueParts[1], inputBase)
+        let integerPart = BaseConverter.arbitraryIntegralToDecimal(valueParts[0], inputBase)
+        let fractionalPart = BaseConverter.arbitraryFractionToDecimal(valueParts[1], inputBase)
         // Make the fractionalPart negative if the integer part is also negative
         // This is needed when both parts are added together to create whole value
         if (integerPart.isNegative()) {
@@ -59,9 +63,9 @@ export class BaseConverter {
         }
         decimalValue = integerPart.plus(fractionalPart)
       } else {
-        decimalValue = this.arbitraryIntegralToDecimal(valueStr, inputBase)
+        decimalValue = BaseConverter.arbitraryIntegralToDecimal(valueStr, inputBase)
       }
-      let complement = this.cc.getComplement(decimalValue.toString(), resultBase)
+      let complement = ComplementConverter.getComplement(decimalValue.toString(), resultBase)
       let inputInDecimal = new BaseRepresentation(
         10,
         decimalValue,
@@ -71,15 +75,14 @@ export class BaseConverter {
       if (resultBase === 10) {
         return inputInDecimal
       }
-      return this.fromBaseRepresentation(inputInDecimal, resultBase)
+      return BaseConverter.fromBaseRepresentation(inputInDecimal, resultBase)
     } else {
       throw new Error('The string does not match the radix')
     }
   }
 
-  arbitraryIntegralToDecimal(valStr: string, radix: number): BigNumber {
-    if (this.isValidString(valStr, radix)) {
-      this.digits.currentRadix = radix
+  static arbitraryIntegralToDecimal(valStr: string, radix: number): BigNumber {
+    if (BaseConverter.isValidString(valStr, radix)) {
       let result = new BigNumber(0)
       let multiplier = 1
       // While converting, the numbers are assumed to be unsigned
@@ -102,7 +105,7 @@ export class BaseConverter {
       let exponent = strArr.length - 1
       for (let i = 0; i <= exponent; i++) {
         result = result.plus(
-          new BigNumber(this.digits.getValue(strArr[i]) * Math.pow(radix, exponent - i))
+          new BigNumber(BaseDigits.getValue(strArr[i], radix) * Math.pow(radix, exponent - i))
         )
       }
       return result.multipliedBy(multiplier)
@@ -110,10 +113,9 @@ export class BaseConverter {
     throw new Error('Invalid string for given radix')
   }
 
-  decimalIntegralToArbitrary(num: BigNumber, radix: number): string {
-    this.digits.currentRadix = radix
+  static decimalIntegralToArbitrary(num: BigNumber, radix: number): string {
     if (num.isZero()) {
-      return this.digits.getDigit(0)
+      return BaseDigits.getDigit(0, radix)
     }
     let result = ''
     let currentNum = num.abs()
@@ -129,15 +131,14 @@ export class BaseConverter {
         // all the characters - the right result would be 06 15 04. If we reverse each digit first in 04 15 06,
         // before the final reverse we will have 40 51 60, and after we will have proper result 06 15 04
         result = result.concat(
-          this.digits
-            .getDigit(remainder.toNumber())
+          BaseDigits.getDigit(remainder.toNumber(), radix)
             .split('')
             .reverse()
             .join('')
         )
         result = result.concat(' ')
       } else {
-        result = result.concat(this.digits.getDigit(remainder.toNumber()))
+        result = result.concat(BaseDigits.getDigit(remainder.toNumber(), radix))
       }
       currentNum = currentNum.dividedToIntegerBy(radix)
     }
@@ -154,10 +155,9 @@ export class BaseConverter {
     return result
   }
 
-  decimalFractionToArbitrary(fraction: BigNumber, radix: number): string {
-    this.digits.currentRadix = radix
+  static decimalFractionToArbitrary(fraction: BigNumber, radix: number, precision = 30): string {
     if (fraction.isZero()) {
-      return this.digits.getDigit(0)
+      return BaseDigits.getDigit(0, radix)
     }
     if (fraction.isNegative()) {
       fraction = fraction.negated()
@@ -167,11 +167,11 @@ export class BaseConverter {
     let fractionPart: BigNumber
     let wholePart = 0
     fractionPart = fraction
-    for (let i = 0; i < this.formatPrecision; i++) {
+    for (let i = 0; i < precision; i++) {
       num = fractionPart.multipliedBy(radix)
       fractionPart = num.mod(1)
       wholePart = num.minus(fractionPart).toNumber()
-      result = result.concat(this.digits.getDigit(wholePart))
+      result = result.concat(BaseDigits.getDigit(wholePart, radix))
       if (radix > 36) {
         result = result.concat(' ')
       }
@@ -179,27 +179,26 @@ export class BaseConverter {
     return removeTrailingZerosAndSpaces(result)
   }
 
-  arbitraryFractionToDecimal(fractionStr: string, radix: number): BigNumber {
+  static arbitraryFractionToDecimal(fractionStr: string, radix: number): BigNumber {
     let decimalFraction = new BigNumber(0.0)
     let exponent = 1.0
     let strArr = representationStrToStrList(fractionStr, radix)
-    this.digits.currentRadix = radix
     // The exponents at positions in fraction are as follows:
     // For fraction  0.531
     // Exponents:  0  . -1 -2 -3
     // Digits:     0  .  5  3  1
     for (let i = 0; i < strArr.length; i++) {
       decimalFraction = decimalFraction.plus(
-        this.digits.getValue(strArr[i]) * Math.pow(radix, exponent * -1)
+        BaseDigits.getValue(strArr[i], radix) * Math.pow(radix, exponent * -1)
       )
       exponent++
     }
     return decimalFraction
   }
 
-  isValidString(str: string, radix: number): boolean {
+  static isValidString(str: string, radix: number): boolean {
     if (radix <= 36) {
-      let re = new RegExp(this.getRepresentationRegexPattern(radix))
+      let re = new RegExp(BaseConverter.getRepresentationRegexPattern(radix))
       return re.test(str)
     }
 
@@ -214,26 +213,25 @@ export class BaseConverter {
     })
   }
 
-  isFloatingPointStr(str: string): boolean {
+  static isFloatingPointStr(str: string): boolean {
     return str.includes('.')
   }
 
-  getRepresentationRegexPattern(radix: number): string {
+  static getRepresentationRegexPattern(radix: number): string {
     if (radix > 36) {
       throw new Error('Matching characters by regex only supporter for bases 2- 36')
     }
     let pattern = ''
-    this.digits.currentRadix = radix
     if (radix <= 10) {
       // All characters that optionally start with -, are between 0 - given number
       // and might have . in between
       pattern = '^-?[0-#]+([.][0-#]+)?$'
-      pattern = replaceAll(pattern, '#', this.digits.getDigit(radix - 1)[0])
+      pattern = replaceAll(pattern, '#', BaseDigits.getDigit(radix - 1, radix)[0])
     } else {
       // All characters that optionally start with -, are between 0 - 9 or A - last character of representation
       // and might . in between
       pattern = '^-?[0-9A-#]+([.][0-9A-#]+)?$'
-      pattern = replaceAll(pattern, '#', this.digits.getDigit(radix - 1)[0])
+      pattern = replaceAll(pattern, '#', BaseDigits.getDigit(radix - 1, radix)[0])
     }
     return pattern
   }

@@ -1,13 +1,12 @@
 import { ComplementConverter, BaseComplement } from './complementConverter'
 
 describe('getPositiveComplement tests', () => {
-  let conv = new ComplementConverter()
   it('returns valid complement for positive number', () => {
     let input = '200'
     let radix = 10
     let expected = '200.0'
     let expectedPrefix = '(0)'
-    let actual = conv.getPositiveNumberComplement(input, radix)
+    let actual = ComplementConverter.getPositiveNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -16,7 +15,7 @@ describe('getPositiveComplement tests', () => {
     let radix = 10
     let expected = '200.0'
     let expectedPrefix = '(0)'
-    let actual = conv.getPositiveNumberComplement(input, radix)
+    let actual = ComplementConverter.getPositiveNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -25,20 +24,19 @@ describe('getPositiveComplement tests', () => {
     let radix = 10
     let expected = '200.73'
     let expectedPrefix = '(0)'
-    let actual = conv.getPositiveNumberComplement(input, radix)
+    let actual = ComplementConverter.getPositiveNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
 })
 
 describe('getNegativeComplement tests', () => {
-  let conv = new ComplementConverter()
   it('returns valid complement for base 10 negative number', () => {
     let input = '-200'
     let radix = 10
     let expected = '800.0'
     let expectedPrefix = '(9)'
-    let actual = conv.getNegativeNumberComplement(input, radix)
+    let actual = ComplementConverter.getNegativeNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -47,7 +45,7 @@ describe('getNegativeComplement tests', () => {
     let radix = 10
     let expected = '800.0'
     let expectedPrefix = '(9)'
-    let actual = conv.getNegativeNumberComplement(input, radix)
+    let actual = ComplementConverter.getNegativeNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -57,7 +55,7 @@ describe('getNegativeComplement tests', () => {
     let radix = 2
     let expected = '00110.1'
     let expectedPrefix = '(1)'
-    let actual = conv.getNegativeNumberComplement(input, radix)
+    let actual = ComplementConverter.getNegativeNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -66,20 +64,19 @@ describe('getNegativeComplement tests', () => {
     let radix = 10
     let expected = '799.27'
     let expectedPrefix = '(9)'
-    let actual = conv.getNegativeNumberComplement(input, radix)
+    let actual = ComplementConverter.getNegativeNumberComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
 })
 
 describe('getComplement tests', () => {
-  let conv = new ComplementConverter()
   it('returns valid complement for positive number', () => {
     let input = '200'
     let radix = 10
     let expected = '200.0'
     let expectedPrefix = '(0)'
-    let actual = conv.getComplement(input, radix)
+    let actual = ComplementConverter.getComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
@@ -88,14 +85,13 @@ describe('getComplement tests', () => {
     let radix = 10
     let expected = '800.0'
     let expectedPrefix = '(9)'
-    let actual = conv.getComplement(input, radix)
+    let actual = ComplementConverter.getComplement(input, radix)
     expect(actual.valueStr).toEqual(expected)
     expect(actual.prefix).toEqual(expectedPrefix)
   })
 })
 
 describe('removeDelimiter tests', () => {
-  let conv = new ComplementConverter()
   it('removes delimiter and returns tuple with string and delimiter index', () => {
     let input = '200.22'
     let radix = 10
@@ -126,7 +122,6 @@ describe('removeDelimiter tests', () => {
 })
 
 describe('restoreDelimiter tests', () => {
-  let conv = new ComplementConverter()
   it('restores delimiter at previous index', () => {
     let input = '20022'
     let radix = 10
@@ -158,7 +153,6 @@ describe('toDigitList tests', () => {
 })
 
 describe('isNegative tests', () => {
-  let conv = new ComplementConverter()
   it('returns true if valueStr is negative', () => {
     let input = '-200.22'
     expect(ComplementConverter.IsNegative(input)).toBeTruthy()
@@ -169,31 +163,30 @@ describe('isNegative tests', () => {
   })
 })
 describe('incrementNumber tests', () => {
-  let conv = new ComplementConverter(10)
   it('increments number when radix is < 36 and there is no propagation', () => {
     let input = ['7', '8', '9', '2', '3', '4']
     let radix = 10
     let expected = '789235'
-    expect(conv.incrementNumber(input, radix)).toEqual(expected)
+    expect(ComplementConverter.incrementNumber(input, radix)).toEqual(expected)
   })
   it('increments number when radix is < 36 and with propagation', () => {
     let input = ['7', '8', '9', '2', '9', '9']
     let radix = 10
     let expected = '789300'
-    expect(conv.incrementNumber(input, radix)).toEqual(expected)
+    expect(ComplementConverter.incrementNumber(input, radix)).toEqual(expected)
   })
   it('increments number when radix is > 36 and there is no propagation', () => {
     let input = ['10', '48', '29', '42', '23', '44']
     let radix = 64
     let expected = '10 48 29 42 23 45'
-    let actual = conv.incrementNumber(input, radix)
+    let actual = ComplementConverter.incrementNumber(input, radix)
     expect(actual).toEqual(expected)
   })
   it('increments number when radix is > 36 and with propagation', () => {
     let input = ['10', '48', '29', '63', '63', '63']
     let radix = 64
     let expected = '10 48 30 00 00 00'
-    expect(conv.incrementNumber(input, radix)).toEqual(expected)
+    expect(ComplementConverter.incrementNumber(input, radix)).toEqual(expected)
   })
 })
 

@@ -23,6 +23,11 @@ describe('GetValue tests', () => {
   it('returns undefined if requested value is equal to radix (not in object)', () => {
     expect(BaseDigits.getValue('10', 10)).toBe(-1)
   })
+  it('throws when radix is invalid', () => {
+    expect(() => {
+      BaseDigits.getValue('10', 100)
+    }).toThrow()
+  })
 })
 describe('GetDigit above 36 radix test', () => {
   it('returns proper digit for value 10 in base 64', () => {
@@ -47,5 +52,10 @@ describe('GetDigit above 36 radix test', () => {
   it('returns proper digits after radix change from 10 to 64', () => {
     expect(BaseDigits.getDigit(9, 10)).toBe('9')
     expect(BaseDigits.getDigit(63, 64)).toBe('63')
+  })
+  it('throws when radix is invalid', () => {
+    expect(() => {
+      BaseDigits.getDigit(10, 100)
+    }).toThrow()
   })
 })

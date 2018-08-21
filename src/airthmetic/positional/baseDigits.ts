@@ -20,6 +20,9 @@ export class BaseDigits {
   }
 
   static getValue(key: string, radix: number): number {
+    if (!this.isValidRadix(radix)) {
+      throw new Error('Radix must be between 2 and ')
+    }
     let value = 0
     if (radix <= 36) {
       value = this.defaultDigits.indexOf(key)
