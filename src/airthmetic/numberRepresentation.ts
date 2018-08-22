@@ -17,6 +17,4 @@ export class NumberRepresentation {
   singleRepStr: string = '0'
   doubleRepStr: string = '0'
   numBase: number = 0
-
-  constructor(decVal: BigNumber, radix: number) {}
 }
