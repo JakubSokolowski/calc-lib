@@ -34,3 +34,11 @@ export function prependZeros(str: string, desiredLength: number): string {
   let count = desiredLength - str.length
   return '0'.repeat(count) + str
 }
+
+export function prependStr(toPrepend: string, str: string, desiredLength: number): string {
+  if (str.length > desiredLength) {
+    return str
+  }
+  let count = desiredLength - str.length
+  return toPrepend[0].repeat(count) + str
+}
