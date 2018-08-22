@@ -1,4 +1,5 @@
 import {
+  prependStr,
   prependZeros,
   removeTrailingZerosAndSpaces,
   replaceAll,
@@ -70,7 +71,7 @@ describe('replaceAll tests', () => {
   })
 })
 
-describe('prependZeros', () => {
+describe('prependZeros tests', () => {
   it('prepends zeros to the string until the desired length is reached', () => {
     let input = '1111'
     let desiredLenght = 8
@@ -84,5 +85,21 @@ describe('prependZeros', () => {
     let actual = prependZeros(input, desiredLenght)
     let expected = '1111'
     expect(actual).toEqual(expected)
+  })
+})
+
+describe('prependStr tests', () => {
+  it('prepends character to the string until the desired length is reached', () => {
+    let input = '1111'
+    let desiredLenght = 8
+    let actual = prependStr('1', input, desiredLenght)
+    let expected = '11111111'
+    expect(actual).toEqual(expected)
+  })
+  it('does not modify the string that is longer than desiredLength', () => {
+    let input = '1111'
+    let desiredLenght = 3
+    let actual = prependStr('1', input, desiredLenght)
+    let expected = '11111111'
   })
 })
