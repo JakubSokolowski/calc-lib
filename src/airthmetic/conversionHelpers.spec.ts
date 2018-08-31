@@ -2,6 +2,7 @@ import {
   prependStr,
   prependZeros,
   removeTrailingZerosAndSpaces,
+  removeZeroDigits,
   replaceAll,
   representationStrToStrList
 } from './conversionHelpers'
@@ -35,6 +36,39 @@ describe('removeTrailingZerosAndSpaces tests', () => {
     let input = ''
     let actual = removeTrailingZerosAndSpaces(input)
     let expected = ''
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe('removeZeroDigits tests', () => {
+  it('removes trailing zero digits from single char digit array', () => {
+    let input = ['1', '2', '3', '0', '1', '0', '0']
+    let actual = removeZeroDigits(input)
+    let expected = ['1', '2', '3', '0', '1']
+    expect(actual).toEqual(expected)
+  })
+  it('does not modify string with nothing to remove', () => {
+    let input = ['1', '2', '3', '0', '1']
+    let actual = removeZeroDigits(input)
+    let expected = ['1', '2', '3', '0', '1']
+    expect(actual).toEqual(expected)
+  })
+  it('removes trailing zero digits from double char digit array', () => {
+    let input = ['11', '23', '30', '50', '10', '00', '00']
+    let actual = removeZeroDigits(input)
+    let expected = ['11', '23', '30', '50', '10']
+    expect(actual).toEqual(expected)
+  })
+  it('does not modify string with nothing to remove', () => {
+    let input = ['1', '2', '3', '0', '1']
+    let actual = removeZeroDigits(input)
+    let expected = ['1', '2', '3', '0', '1']
+    expect(actual).toEqual(expected)
+  })
+  it('does not modify empty array', () => {
+    let input: string[] = []
+    let actual = removeZeroDigits(input)
+    let expected: string[] = []
     expect(actual).toEqual(expected)
   })
 })

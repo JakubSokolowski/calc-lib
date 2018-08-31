@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js'
 import { BaseDigits } from './baseDigits'
 import {
   removeTrailingZerosAndSpaces,
+  removeZeroDigits,
   replaceAll,
   representationStrToStrList
 } from '../conversionHelpers'
@@ -10,31 +11,72 @@ import { ComplementConverter, BaseComplement } from './complementConverter'
 export class BaseRepresentation {
   radix: number = 10
   valueInDecimal: BigNumber
-  valueInBase: string
   complement: BaseComplement
+
+  integralDigits: string[] = []
+  fractionalDigits: string[] = []
 
   constructor(
     radix: number,
     valInDecimal: BigNumber,
-    valInBase: string,
+    integral: string[],
+    fractional: string[],
     complement: BaseComplement
   ) {
     this.radix = radix
     this.valueInDecimal = valInDecimal
-    this.valueInBase = valInBase
+    this.integralDigits = integral
+    this.fractionalDigits = fractional
     this.complement = complement
+  }
+
+  get valueInBase(): string {
+    return (
+      this.sign +
+      this.integralDigits.join(this.radix > 36 ? ' ' : '') +
+      this.delimiter +
+      this.fractionalDigits.join(this.radix > 36 ? ' ' : '')
+    )
+  }
+
+  get sign(): string {
+    return this.valueInDecimal.isNegative() ? '-' : ''
+  }
+
+  get delimiter(): string {
+    return this.fractionalDigits.length ? '.' : ''
+  }
+}
+
+export class Conversion {
+  result: BaseRepresentation
+  integralDivisors: string[]
+  fractionalMultipliers: string[]
+
+  constructor(result: BaseRepresentation, divisors: string[], multipliers: string[]) {
+    this.result = result
+    this.integralDivisors = divisors
+    this.fractionalMultipliers = multipliers
   }
 }
 
 export class BaseConverter {
   static fromBigNumber(num: BigNumber, resultBase: number, precision = 30): BaseRepresentation {
+    let sign = num.isNegative() ? '-' : ''
     let fractionVal = num.mod(1)
     let integerVal = num.minus(fractionVal)
-    let fractionStr = BaseConverter.decimalFractionToArbitrary(fractionVal, resultBase, precision)
-    let integerStr = BaseConverter.decimalIntegralToArbitrary(integerVal, resultBase)
-    let result = integerStr + '.' + fractionStr
-    let complement = ComplementConverter.getComplement(result, resultBase)
-    return new BaseRepresentation(resultBase, num, result, complement)
+    let integerDigits = BaseConverter.decimalIntegralToArbitrary(integerVal, resultBase)
+    let fractionDigits = BaseConverter.decimalFractionToArbitrary(
+      fractionVal,
+      resultBase,
+      precision
+    )
+    let result =
+      integerDigits[0].join(resultBase > 36 ? ' ' : '') +
+      '.' +
+      fractionDigits[0].join(resultBase > 36 ? ' ' : '')
+    let complement = ComplementConverter.getComplement(sign + result, resultBase)
+    return new BaseRepresentation(resultBase, num, integerDigits[0], fractionDigits[0], complement)
   }
 
   static fromBaseRepresentation(
@@ -66,10 +108,14 @@ export class BaseConverter {
         decimalValue = BaseConverter.arbitraryIntegralToDecimal(valueStr, inputBase)
       }
       let complement = ComplementConverter.getComplement(decimalValue.toString(), resultBase)
+      // Split into two str arrays - integral part digits arr and
+      // fractional part digits arr
+      let digits = this.toDigitLists(decimalValue)
       let inputInDecimal = new BaseRepresentation(
         10,
         decimalValue,
-        decimalValue.toString(),
+        digits[0],
+        digits[1],
         complement
       )
       if (resultBase === 10) {
@@ -113,70 +159,69 @@ export class BaseConverter {
     throw new Error('Invalid string for given radix')
   }
 
-  static decimalIntegralToArbitrary(num: BigNumber, radix: number): string {
+  static decimalIntegralToArbitrary(num: BigNumber, radix: number): [string[], string[]] {
     if (num.isZero()) {
-      return BaseDigits.getDigit(0, radix)
+      return [[BaseDigits.getDigit(0, radix)], []]
     }
-    let result = ''
+    let remainders: string[] = []
+    let resultDigits: string[] = []
     let currentNum = num.abs()
     while (!currentNum.isZero()) {
+      remainders.push(currentNum.toString())
       let remainder = currentNum.mod(radix)
-      if (radix > 36) {
-        // Reverse the each digit before adding. It's needed for bases higher than 36
-        // The digits at positions are calculated from the smallest to biggest position
-        // and the order in number is from biggest to smallest, so after appending all positions
-        // whole number string must be reversed. That creates problem for bases, where the digits
-        // contain 2 characters. For example, let's say that the result of conversion to base 64 is 04 15 06.
-        // The number will be later reversed - 60 51 40, but we need to reverse digits, not
-        // all the characters - the right result would be 06 15 04. If we reverse each digit first in 04 15 06,
-        // before the final reverse we will have 40 51 60, and after we will have proper result 06 15 04
-        result = result.concat(
-          BaseDigits.getDigit(remainder.toNumber(), radix)
-            .split('')
-            .reverse()
-            .join('')
-        )
-        result = result.concat(' ')
-      } else {
-        result = result.concat(BaseDigits.getDigit(remainder.toNumber(), radix))
-      }
+      // if (radix > 36) {
+      //   // Reverse the each digit before adding. It's needed for bases higher than 36
+      //   // The digits at positions are calculated from the smallest to biggest position
+      //   // and the order in number is from biggest to smallest, so after appending all positions
+      //   // whole number string must be reversed. That creates problem for bases, where the digits
+      //   // contain 2 characters. For example, let's say that the result of conversion to base 64 is 04 15 06.
+      //   // The number will be later reversed - 60 51 40, but we need to reverse digits, not
+      //   // all the characters - the right result would be 06 15 04. If we reverse each digit first in 04 15 06,
+      //   // before the final reverse we will have 40 51 60, and after we will have proper result 06 15 04
+      //   resultDigits.push(BaseDigits.getDigit(remainder.toNumber(), radix));
+      //   result = result.concat(
+      //     BaseDigits.getDigit(remainder.toNumber(), radix)
+      //       .split('')
+      //       .reverse()
+      //       .join('')
+      //   )
+      //   result = result.concat(' ')
+      // } else {
+      //
+      // }
+      resultDigits.push(BaseDigits.getDigit(remainder.toNumber(), radix))
       currentNum = currentNum.dividedToIntegerBy(radix)
     }
-    result = result
-      .split('')
-      .reverse()
-      .join('')
-    if (radix > 36) {
-      result = result.substr(1)
-    }
-    if (num.isNegative()) {
-      result = '-' + result
-    }
-    return result
+    return [resultDigits.reverse(), remainders]
   }
 
-  static decimalFractionToArbitrary(fraction: BigNumber, radix: number, precision = 30): string {
+  static decimalFractionToArbitrary(
+    fraction: BigNumber,
+    radix: number,
+    precision = 30
+  ): [string[], string[]] {
     if (fraction.isZero()) {
-      return BaseDigits.getDigit(0, radix)
+      return [[BaseDigits.getDigit(0, radix)], []]
     }
     if (fraction.isNegative()) {
       fraction = fraction.negated()
     }
-    let result = ''
+    let result: string[] = []
     let num = new BigNumber(0)
     let fractionPart: BigNumber
     let wholePart = 0
+    let fractions: string[] = []
     fractionPart = fraction
     for (let i = 0; i < precision; i++) {
+      fractions.push(fractionPart.toString())
       num = fractionPart.multipliedBy(radix)
       fractionPart = num.mod(1)
       wholePart = num.minus(fractionPart).toNumber()
-      result = result.concat(BaseDigits.getDigit(wholePart, radix))
-      if (radix > 36) {
-        result = result.concat(' ')
-      }
+      result.push(BaseDigits.getDigit(wholePart, radix))
     }
-    return removeTrailingZerosAndSpaces(result)
+    result = removeZeroDigits(result)
+    fractions = removeZeroDigits(fractions)
+    return [result, fractions]
   }
 
   static arbitraryFractionToDecimal(fractionStr: string, radix: number): BigNumber {
@@ -234,5 +279,20 @@ export class BaseConverter {
       pattern = replaceAll(pattern, '#', BaseDigits.getDigit(radix - 1, radix)[0])
     }
     return pattern
+  }
+
+  static toDigitLists(num: BigNumber): [string[], string[]] {
+    let int: string[] = []
+    let frac: string[] = []
+    let digits = num.toString()
+    if (num.isNegative()) {
+      digits = digits.substring(1)
+    }
+    if (digits.includes('.')) {
+      // Number has non zero fraction part
+      frac = digits.split('.')[1].split('')
+    }
+    int = digits.split('.')[0].split('')
+    return [int, frac]
   }
 }

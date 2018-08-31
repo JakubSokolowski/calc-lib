@@ -68,44 +68,65 @@ describe('decimalIntegralToArbitrary tests', () => {
   it('returns correct pattern for 0 in base 2', () => {
     let input = new BigNumber(0)
     let radix = 2
-    let expected = '0'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = '0'.split('')
+    let expectedDivisors: string[] = []
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 25 in base 2', () => {
     let input = new BigNumber(25)
     let radix = 2
-    let expected = '11001'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = '11001'.split('')
+    let expectedDivisors: string[] = ['25', '12', '6', '3', '1']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -25 in base 2', () => {
     let input = new BigNumber(-25)
     let radix = 2
-    let expected = '-11001'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = '11001'.split('')
+    let expectedDivisors: string[] = ['25', '12', '6', '3', '1']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 255 in base 16', () => {
     let input = new BigNumber(255)
     let radix = 16
-    let expected = 'FF'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = 'FF'.split('')
+    let expectedDivisors: string[] = ['255', '15']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -255 in base 16', () => {
     let input = new BigNumber(-255)
     let radix = 16
-    let expected = '-FF'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = 'FF'.split('')
+    let expectedDivisors = ['255', '15']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 100 in base 64', () => {
     let input = new BigNumber(100)
     let radix = 64
-    let expected = '01 36'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = '01 36'.split(' ')
+    let expectedDivisors = ['100', '1']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -100 in base 64', () => {
     let input = new BigNumber(-100)
     let radix = 64
-    let expected = '-01 36'
-    expect(BaseConverter.decimalIntegralToArbitrary(input, radix)).toEqual(expected)
+    let expected = '01 36'.split(' ')
+    let expectedDivisors = ['100', '1']
+    let result = BaseConverter.decimalIntegralToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedDivisors)
   })
 })
 
@@ -165,44 +186,143 @@ describe('decimalFractionToArbitrary tests', () => {
   it('converts 0 fraction to zero digit', () => {
     let input = new BigNumber(0)
     let radix = 2
-    let expected = '0'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '0'.split('')
+    let expectedFractions: string[] = []
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact binary', () => {
     let input = new BigNumber(0.75)
     let radix = 2
-    let expected = '11'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '11'.split('')
+    let expectedFractions: string[] = ['0.75', '0.5']
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 2 with 30 digits precision', () => {
     let input = new BigNumber(0.3)
     let radix = 2
-    let expected = '010011001100110011001100110011'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '010011001100110011001100110011'.split('')
+    let expectedFractions: string[] = [
+      '0.3',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6',
+      '0.2',
+      '0.4',
+      '0.8',
+      '0.6'
+    ]
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact base 16', () => {
     let input = new BigNumber(0.5)
     let radix = 16
-    let expected = '8'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '8'.split('')
+    let expectedFractions: string[] = ['0.5']
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 16 with 30 digits precision', () => {
     let input = new BigNumber(0.3)
     let radix = 16
-    let expected = '4CCCCCCCCCCCCCCCCCCCCCCCCCCCCC'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '4CCCCCCCCCCCCCCCCCCCCCCCCCCCCC'.split('')
+    let expectedFractions: string[] = [
+      '0.3',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8',
+      '0.8'
+    ]
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact base 64', () => {
     let input = new BigNumber(0.5)
     let radix = 64
-    let expected = '32'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix)).toEqual(expected)
+    let expected = '32'.split(' ')
+    let expectedFractions: string[] = ['0.5']
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 64 with 15 digits precision', () => {
     let input = new BigNumber(0.3)
     let radix = 64
-    let expected = '19 12 51 12 51 12 51 12 51 12 51 12 51 12 51'
-    expect(BaseConverter.decimalFractionToArbitrary(input, radix, 15)).toEqual(expected)
+    let expected = '19 12 51 12 51 12 51 12 51 12 51 12 51 12 51'.split(' ')
+    let expectedFractions: string[] = [
+      '0.3',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8',
+      '0.2',
+      '0.8'
+    ]
+    let result = BaseConverter.decimalFractionToArbitrary(input, radix, 15)
+    expect(result[0]).toEqual(expected)
+    expect(result[1]).toEqual(expectedFractions)
   })
 })
 
@@ -374,5 +494,32 @@ describe('fromValueString tests', () => {
     expect(() => {
       BaseConverter.fromValueString(input, inputRadix, outputRadix)
     }).toThrow()
+  })
+})
+
+describe('toDigitsLists test', () => {
+  it('Converts float number to lists of integer and fraction part digits', () => {
+    let num = new BigNumber(25.5)
+    let expectedIntegral = ['2', '5']
+    let expectedFractional = ['5']
+    let result = BaseConverter.toDigitLists(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+  it('Converts int number to lists of integer and fraction part digits', () => {
+    let num = new BigNumber(25)
+    let expectedIntegral = ['2', '5']
+    let expectedFractional: string[] = []
+    let result = BaseConverter.toDigitLists(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+  it('Converts negative int number to lists of integer and fraction part digits', () => {
+    let num = new BigNumber(-25)
+    let expectedIntegral = ['2', '5']
+    let expectedFractional: string[] = []
+    let result = BaseConverter.toDigitLists(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
   })
 })
