@@ -70,7 +70,11 @@ export class SingleRepresentation extends FloatingRepresentation {
   }
 
   get mantissaValue() {
-    return BaseConverter.fromValueString('1.' + this.mantissa, 2, 10).valueInDecimal.toNumber()
+    return BaseConverter.fromValueString(
+      '1.' + this.mantissa,
+      2,
+      10
+    ).result.valueInDecimal.toNumber()
   }
 }
 
