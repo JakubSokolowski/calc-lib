@@ -34,7 +34,7 @@ export function prependZeros(str: string, desiredLength: number): string {
   if (str.length > desiredLength) {
     return str
   }
-  let count = desiredLength - str.length
+  const count = desiredLength - str.length
   return '0'.repeat(count) + str
 }
 
@@ -42,7 +42,7 @@ export function prependStr(toPrepend: string, str: string, desiredLength: number
   if (str.length > desiredLength) {
     return str
   }
-  let count = desiredLength - str.length
+  const count = desiredLength - str.length
   return toPrepend[0].repeat(count) + str
 }
 
@@ -70,7 +70,7 @@ export function arbitraryIntegralToDecimal(valStr: string, radix: number): BigNu
     }
     // Digits at positions in some representation are represented by multiple characters,
     // so it's necessary to convert valueString to list of strings
-    let strArr = representationStrToStrList(valStr, radix)
+    const strArr = representationStrToStrList(valStr, radix)
     // The value at each position is calculated by taking the value of digit
     // and multiplying it by the base of number to the power of exponent
 
@@ -79,7 +79,7 @@ export function arbitraryIntegralToDecimal(valStr: string, radix: number): BigNu
     // Exponents:  ...2 1 0
     // Digits:        5 3 1
     // So the starting value of exponent is the count of elements in lis -1
-    let exponent = strArr.length - 1
+    const exponent = strArr.length - 1
     for (let i = 0; i <= exponent; i++) {
       result = result.plus(
         new BigNumber(BaseDigits.getValue(strArr[i], radix) * Math.pow(radix, exponent - i))
@@ -94,12 +94,12 @@ export function decimalIntegralToArbitrary(num: BigNumber, radix: number): [stri
   if (num.isZero()) {
     return [[BaseDigits.getDigit(0, radix)], []]
   }
-  let remainders: string[] = []
-  let resultDigits: string[] = []
+  const remainders: string[] = []
+  const resultDigits: string[] = []
   let currentNum = num.abs()
   while (!currentNum.isZero()) {
     remainders.push(currentNum.toString())
-    let remainder = currentNum.mod(radix)
+    const remainder = currentNum.mod(radix)
     resultDigits.push(BaseDigits.getDigit(remainder.toNumber(), radix))
     currentNum = currentNum.dividedToIntegerBy(radix)
   }
@@ -138,14 +138,14 @@ export function decimalFractionToArbitrary(
 export function arbitraryFractionToDecimal(fractionStr: string, radix: number): BigNumber {
   let decimalFraction = new BigNumber(0.0)
   let exponent = 1.0
-  let strArr = representationStrToStrList(fractionStr, radix)
+  const strArr = representationStrToStrList(fractionStr, radix)
   // The exponents at positions in fraction are as follows:
   // For fraction  0.531
   // Exponents:  0  . -1 -2 -3
   // Digits:     0  .  5  3  1
-  for (let i = 0; i < strArr.length; i++) {
+  for (const digit of strArr) {
     decimalFraction = decimalFraction.plus(
-      BaseDigits.getValue(strArr[i], radix) * Math.pow(radix, exponent * -1)
+      BaseDigits.getValue(digit, radix) * Math.pow(radix, exponent * -1)
     )
     exponent++
   }
@@ -154,7 +154,7 @@ export function arbitraryFractionToDecimal(fractionStr: string, radix: number): 
 
 export function isValidString(str: string, radix: number): boolean {
   if (radix <= 36) {
-    let re = new RegExp(getRepresentationRegexPattern(radix))
+    const re = new RegExp(getRepresentationRegexPattern(radix))
     return re.test(str)
   }
 
@@ -162,9 +162,9 @@ export function isValidString(str: string, radix: number): boolean {
     str = str.substr(1)
   }
 
-  let strList = str.replace('.', ' ').split(' ')
+  const strList = str.replace('.', ' ').split(' ')
   return strList.some(digit => {
-    let num = parseInt(digit, 10)
+    const num = parseInt(digit, 10)
     return !Number.isNaN(num) && num < radix
   })
 }
@@ -193,7 +193,7 @@ export function getRepresentationRegexPattern(radix: number): string {
 }
 
 export function toDigitLists(num: BigNumber): [string[], string[]] {
-  let int: string[] = []
+  let int: string[]
   let frac: string[] = []
   let digits = num.toString()
   if (num.isNegative()) {

@@ -5,8 +5,8 @@ describe('GetDigit sub 36 radix test', () => {
     expect(BaseDigits.getDigit(10, 16)).toBe('A')
   })
   it('throws error, if requested digit is greater than radix', () => {
-    expect(function() {
-      let digit = BaseDigits.getDigit(16, 10)
+    expect(() => {
+      BaseDigits.getDigit(16, 10)
     }).toThrow()
   })
 })
@@ -40,13 +40,13 @@ describe('GetDigit above 36 radix test', () => {
     expect(BaseDigits.getDigit(63, 64)).toBe('63')
   })
   it('throws error, if requested digit is equal to radix', () => {
-    expect(function() {
-      let digit = BaseDigits.getDigit(64, 64)
+    expect(() => {
+      BaseDigits.getDigit(64, 64)
     }).toThrow()
   })
   it('throws error, if requested digit is greater than radix', () => {
-    expect(function() {
-      let digit = BaseDigits.getDigit(65, 64)
+    expect(() => {
+      BaseDigits.getDigit(65, 64)
     }).toThrow()
   })
   it('returns proper digits after radix change from 10 to 64', () => {

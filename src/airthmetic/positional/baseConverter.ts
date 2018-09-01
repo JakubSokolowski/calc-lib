@@ -11,12 +11,12 @@ import {
 import { BaseComplement, ComplementConverter } from './complementConverter'
 
 export class BaseRepresentation {
-  radix: number = 10
-  valueInDecimal: BigNumber
-  complement: BaseComplement
+  public radix: number = 10
+  public valueInDecimal: BigNumber
+  public complement: BaseComplement
 
-  integralDigits: string[] = []
-  fractionalDigits: string[] = []
+  public integralDigits: string[] = []
+  public fractionalDigits: string[] = []
 
   constructor(
     radix: number,
@@ -54,19 +54,19 @@ enum ConversionType {
   INDIRECT
 }
 export class Conversion {
-  stages: ConversionStage[] = []
-  type: ConversionType = ConversionType.DIRECT
+  public stages: ConversionStage[] = []
+  public type: ConversionType = ConversionType.DIRECT
 
   get result(): BaseRepresentation {
     return this.stages[this.stages.length - 1].result
   }
 
-  addStage(stage: ConversionStage): void {
+  public addStage(stage: ConversionStage): void {
     this.stages.push(stage)
     this.assignConversionType()
   }
 
-  concatConversion(conv: Conversion): void {
+  public concatConversion(conv: Conversion): void {
     this.stages = this.stages.concat(conv.stages)
     this.assignConversionType()
   }
@@ -81,8 +81,8 @@ interface ConversionStage {
 }
 
 export class ConversionToDecimal implements ConversionStage {
-  input: [string, number]
-  result: BaseRepresentation
+  public input: [string, number]
+  public result: BaseRepresentation
 
   constructor(input: [string, number], result: BaseRepresentation) {
     this.input = input
@@ -90,8 +90,8 @@ export class ConversionToDecimal implements ConversionStage {
   }
 }
 export class ConversionToArbitrary extends ConversionToDecimal {
-  integralDivisors: string[]
-  fractionalMultipliers: string[]
+  public integralDivisors: string[]
+  public fractionalMultipliers: string[]
 
   constructor(
     input: [string, number],
@@ -117,7 +117,11 @@ export interface BaseConverter {
 }
 
 export class StandardBaseConverter implements BaseConverter {
-  fromNumber(num: number | BigNumber, resultBase: number, precision: number = 30): Conversion {
+  public fromNumber(
+    num: number | BigNumber,
+    resultBase: number,
+    precision: number = 30
+  ): Conversion {
     let decimalValue: BigNumber = new BigNumber(0)
     if (typeof num === 'number') {
       decimalValue = new BigNumber(num)
@@ -125,42 +129,42 @@ export class StandardBaseConverter implements BaseConverter {
     if (num instanceof BigNumber) {
       decimalValue = num
     }
-    let sign = decimalValue.isNegative() ? '-' : ''
-    let fractionVal = decimalValue.mod(1)
-    let integerVal = decimalValue.minus(fractionVal)
-    let integerDigits = decimalIntegralToArbitrary(integerVal, resultBase)
-    let fractionDigits = decimalFractionToArbitrary(fractionVal, resultBase, precision)
-    let repStr =
+    const sign = decimalValue.isNegative() ? '-' : ''
+    const fractionVal = decimalValue.mod(1)
+    const integerVal = decimalValue.minus(fractionVal)
+    const integerDigits = decimalIntegralToArbitrary(integerVal, resultBase)
+    const fractionDigits = decimalFractionToArbitrary(fractionVal, resultBase, precision)
+    const repStr =
       integerDigits[0].join(resultBase > 36 ? ' ' : '') +
       '.' +
       fractionDigits[0].join(resultBase > 36 ? ' ' : '')
-    let complement = ComplementConverter.getComplement(sign + repStr, resultBase)
-    let result = new BaseRepresentation(
+    const complement = ComplementConverter.getComplement(sign + repStr, resultBase)
+    const result = new BaseRepresentation(
       resultBase,
       decimalValue,
       integerDigits[0],
       fractionDigits[0],
       complement
     )
-    let conv = new Conversion()
+    const conv = new Conversion()
     conv.addStage(
       new ConversionToArbitrary([num.toString(), 10], result, integerDigits[1], fractionDigits[1])
     )
     return conv
   }
 
-  fromString(
+  public fromString(
     valueStr: string,
     inputBase: number,
     resultBase: number,
     precision: number = 30
   ): Conversion {
     if (isValidString(valueStr, inputBase)) {
-      let conv = new Conversion()
+      const conv = new Conversion()
       let decimalValue = new BigNumber(0)
       if (isFloatingPointStr(valueStr)) {
-        let valueParts = valueStr.split('.')
-        let integerPart = arbitraryIntegralToDecimal(valueParts[0], inputBase)
+        const valueParts = valueStr.split('.')
+        const integerPart = arbitraryIntegralToDecimal(valueParts[0], inputBase)
         let fractionalPart = arbitraryFractionToDecimal(valueParts[1], inputBase)
         // Make the fractionalPart negative if the integer part is also negative
         // This is needed when both parts are added together to create whole value
@@ -171,11 +175,11 @@ export class StandardBaseConverter implements BaseConverter {
       } else {
         decimalValue = arbitraryIntegralToDecimal(valueStr, inputBase)
       }
-      let complement = ComplementConverter.getComplement(decimalValue.toString(), resultBase)
+      const complement = ComplementConverter.getComplement(decimalValue.toString(), resultBase)
       // Split into two str arrays - integral part digits arr and
       // fractional part digits arr
-      let digits = toDigitLists(decimalValue)
-      let inputInDecimal = new BaseRepresentation(
+      const digits = toDigitLists(decimalValue)
+      const inputInDecimal = new BaseRepresentation(
         10,
         decimalValue,
         digits[0],

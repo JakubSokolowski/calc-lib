@@ -12,11 +12,11 @@ export enum FloatProperty {
 }
 
 export abstract class FloatingRepresentation {
-  exponentLength: number = 8
-  mantissaLength: number = 23
-  binaryLength: number = 32
-  bias: number = 127
-  binary: string = ''
+  public exponentLength: number = 8
+  public mantissaLength: number = 23
+  public binaryLength: number = 32
+  public bias: number = 127
+  public binary: string = ''
 
   abstract get value(): number
 
@@ -75,10 +75,10 @@ export class SingleRepresentation extends FloatingRepresentation {
 }
 
 export class DoubleRepresentation extends SingleRepresentation {
-  exponentLength = 11
-  mantissaLength = 52
-  binaryLength = 64
-  bias = 1023
+  public exponentLength = 11
+  public mantissaLength = 52
+  public binaryLength = 64
+  public bias = 1023
 
   get value() {
     return FloatConverter.BinaryStringToDouble(this.binary)
@@ -86,30 +86,20 @@ export class DoubleRepresentation extends SingleRepresentation {
 }
 
 export class FloatConverter {
-  static ToSingle(val: number | string): SingleRepresentation {
-    let str = ''
-    if (typeof val === 'number') {
-      str = this.SingleToBinaryString(val)
-    } else {
-      str = val
-    }
+  public static ToSingle(val: number | string): SingleRepresentation {
+    const str = typeof val === 'number' ? this.SingleToBinaryString(val) : val
     return new SingleRepresentation(str)
   }
 
-  static ToDouble(val: number | string): DoubleRepresentation {
-    let str = ''
-    if (typeof val === 'number') {
-      str = this.DoubleToBinaryString(val)
-    } else {
-      str = val
-    }
+  public static ToDouble(val: number | string): DoubleRepresentation {
+    const str = typeof val === 'number' ? this.DoubleToBinaryString(val) : val
     return new DoubleRepresentation(str)
   }
 
-  static DoubleToBinaryString(d: number): string {
-    let buffer = new ArrayBuffer(8)
-    let doubleView = new Float64Array(buffer)
-    let intView = new Int32Array(buffer)
+  public static DoubleToBinaryString(d: number): string {
+    const buffer = new ArrayBuffer(8)
+    const doubleView = new Float64Array(buffer)
+    const intView = new Int32Array(buffer)
     doubleView[0] = d
     let low = (intView[0] >>> 0).toString(2)
     let high = (intView[1] >>> 0).toString(2)
@@ -118,31 +108,31 @@ export class FloatConverter {
     return high + low
   }
 
-  static BinaryStringToDouble(s: string): number {
-    let low = Number.parseInt(s.substr(0, 32), 2)
-    let high = Number.parseInt(s.substr(32), 2)
-    let buffer = new Buffer(8)
+  public static BinaryStringToDouble(s: string): number {
+    const low = Number.parseInt(s.substr(0, 32), 2)
+    const high = Number.parseInt(s.substr(32), 2)
+    const buffer = new Buffer(8)
     buffer.writeInt32BE(low, 0)
     buffer.writeInt32BE(high, 4)
     return buffer.readDoubleBE(0)
   }
 
-  static SingleToBinaryString(f: number): string {
-    let buffer = new ArrayBuffer(4)
-    let intView = new Int32Array(buffer)
-    let floatView = new Float32Array(buffer)
+  public static SingleToBinaryString(f: number): string {
+    const buffer = new ArrayBuffer(4)
+    const intView = new Int32Array(buffer)
+    const floatView = new Float32Array(buffer)
     floatView[0] = f
     return prependZeros((intView[0] >>> 0).toString(2), 32)
   }
 
-  static BinaryStringToSingle(s: string): number {
-    let num = Number.parseInt(s, 2)
-    let buffer = new Buffer(4)
+  public static BinaryStringToSingle(s: string): number {
+    const num = Number.parseInt(s, 2)
+    const buffer = new Buffer(4)
     buffer.writeInt32BE(num, 0)
     return buffer.readFloatBE(0)
   }
 
-  static getProperty(representation: FloatingRepresentation): FloatProperty {
+  public static getProperty(representation: FloatingRepresentation): FloatProperty {
     if (this.isPositiveZero(representation)) {
       return FloatProperty.PositiveZero
     }
@@ -164,7 +154,7 @@ export class FloatConverter {
     return FloatProperty.Normalized
   }
 
-  static isPositiveZero(representation: FloatingRepresentation): boolean {
+  public static isPositiveZero(representation: FloatingRepresentation): boolean {
     return (
       representation.sign === '0' &&
       /^0*$/.test(representation.exponent) &&
@@ -172,7 +162,7 @@ export class FloatConverter {
     )
   }
 
-  static isNegativeZero(representation: FloatingRepresentation): boolean {
+  public static isNegativeZero(representation: FloatingRepresentation): boolean {
     return (
       representation.sign === '1' &&
       /^0*$/.test(representation.exponent) &&
@@ -180,11 +170,11 @@ export class FloatConverter {
     )
   }
 
-  static isDenormalized(representation: FloatingRepresentation): boolean {
+  public static isDenormalized(representation: FloatingRepresentation): boolean {
     return /^0*$/.test(representation.exponent) && !/^0*$/.test(representation.mantissa)
   }
 
-  static isPositiveInfinity(representation: FloatingRepresentation): boolean {
+  public static isPositiveInfinity(representation: FloatingRepresentation): boolean {
     return (
       representation.sign === '0' &&
       /^1*$/.test(representation.exponent) &&
@@ -192,7 +182,7 @@ export class FloatConverter {
     )
   }
 
-  static isNegativeInfinity(representation: FloatingRepresentation): boolean {
+  public static isNegativeInfinity(representation: FloatingRepresentation): boolean {
     return (
       representation.sign === '1' &&
       /^1*$/.test(representation.exponent) &&
@@ -200,7 +190,7 @@ export class FloatConverter {
     )
   }
 
-  static IsNAN(representation: FloatingRepresentation): boolean {
+  public static IsNAN(representation: FloatingRepresentation): boolean {
     return /^1*$/.test(representation.exponent) && !/^0*$/.test(representation.mantissa)
   }
 }
