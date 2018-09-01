@@ -173,7 +173,6 @@ export class BaseConverter {
         return conv
       }
       conv.concatConversion(BaseConverter.fromBaseRepresentation(inputInDecimal, resultBase))
-      console.log(conv)
       return conv
     } else {
       throw new Error('The string does not match the radix')
