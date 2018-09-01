@@ -1,12 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { BaseDigits } from './baseDigits'
-import {
-  removeTrailingZerosAndSpaces,
-  removeZeroDigits,
-  replaceAll,
-  representationStrToStrList
-} from '../conversionHelpers'
-import { ComplementConverter, BaseComplement } from './complementConverter'
+import { removeZeroDigits, replaceAll, representationStrToStrList } from '../conversionHelpers'
+import { BaseComplement, ComplementConverter } from './complementConverter'
 
 export class BaseRepresentation {
   radix: number = 10
@@ -48,20 +43,67 @@ export class BaseRepresentation {
   }
 }
 
+enum ConversionType {
+  DIRECT,
+  INDIRECT
+}
+
 export class Conversion {
+  stages: ConversionStage[] = []
+  type: ConversionType = ConversionType.DIRECT
+
+  get result(): BaseRepresentation {
+    return this.stages[this.stages.length - 1].result
+  }
+
+  addStage(stage: ConversionStage): void {
+    this.stages.push(stage)
+    this.assignConversionType()
+  }
+
+  concatConversion(conv: Conversion): void {
+    this.stages = this.stages.concat(conv.stages)
+    this.assignConversionType()
+  }
+
+  private assignConversionType(): void {
+    this.type = this.stages.length > 1 ? ConversionType.INDIRECT : ConversionType.DIRECT
+  }
+}
+
+interface ConversionStage {
+  input: [string, number]
   result: BaseRepresentation
+}
+
+class ConversionToDecimal implements ConversionStage {
+  input: [string, number]
+  result: BaseRepresentation
+
+  constructor(input: [string, number], result: BaseRepresentation) {
+    this.input = input
+    this.result = result
+  }
+}
+
+export class ConversionToArbitrary extends ConversionToDecimal {
   integralDivisors: string[]
   fractionalMultipliers: string[]
 
-  constructor(result: BaseRepresentation, divisors: string[], multipliers: string[]) {
-    this.result = result
+  constructor(
+    input: [string, number],
+    result: BaseRepresentation,
+    divisors: string[],
+    multipliers: string[]
+  ) {
+    super(input, result)
     this.integralDivisors = divisors
     this.fractionalMultipliers = multipliers
   }
 }
 
 export class BaseConverter {
-  static fromBigNumber(num: BigNumber, resultBase: number, precision = 30): BaseRepresentation {
+  static fromBigNumber(num: BigNumber, resultBase: number, precision = 30): Conversion {
     let sign = num.isNegative() ? '-' : ''
     let fractionVal = num.mod(1)
     let integerVal = num.minus(fractionVal)
@@ -71,28 +113,36 @@ export class BaseConverter {
       resultBase,
       precision
     )
-    let result =
+    let repStr =
       integerDigits[0].join(resultBase > 36 ? ' ' : '') +
       '.' +
       fractionDigits[0].join(resultBase > 36 ? ' ' : '')
-    let complement = ComplementConverter.getComplement(sign + result, resultBase)
-    return new BaseRepresentation(resultBase, num, integerDigits[0], fractionDigits[0], complement)
+    let complement = ComplementConverter.getComplement(sign + repStr, resultBase)
+    let result = new BaseRepresentation(
+      resultBase,
+      num,
+      integerDigits[0],
+      fractionDigits[0],
+      complement
+    )
+    let conv = new Conversion()
+    conv.addStage(
+      new ConversionToArbitrary([num.toString(), 10], result, integerDigits[1], fractionDigits[1])
+    )
+    return conv
   }
 
   static fromBaseRepresentation(
     num: BaseRepresentation,
     resultBase: number,
     precision = 30
-  ): BaseRepresentation {
+  ): Conversion {
     return BaseConverter.fromBigNumber(num.valueInDecimal, resultBase, precision)
   }
 
-  static fromValueString(
-    valueStr: string,
-    inputBase: number,
-    resultBase: number
-  ): BaseRepresentation {
+  static fromValueString(valueStr: string, inputBase: number, resultBase: number): Conversion {
     if (BaseConverter.isValidString(valueStr, inputBase)) {
+      let conv = new Conversion()
       let decimalValue = new BigNumber(0)
       if (BaseConverter.isFloatingPointStr(valueStr)) {
         let valueParts = valueStr.split('.')
@@ -118,10 +168,14 @@ export class BaseConverter {
         digits[1],
         complement
       )
+      conv.addStage(new ConversionToDecimal([valueStr, inputBase], inputInDecimal))
+      console.log(conv)
       if (resultBase === 10) {
-        return inputInDecimal
+        return conv
       }
-      return BaseConverter.fromBaseRepresentation(inputInDecimal, resultBase)
+      conv.concatConversion(BaseConverter.fromBaseRepresentation(inputInDecimal, resultBase))
+      console.log(conv)
+      return conv
     } else {
       throw new Error('The string does not match the radix')
     }

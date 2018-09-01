@@ -368,7 +368,7 @@ describe('fromBigNumber tests', () => {
     let radix = 2
     let expected = '11001.1'
     let expectedComplement = '(0)11001.1'
-    let result = BaseConverter.fromBigNumber(input, radix)
+    let result = BaseConverter.fromBigNumber(input, radix).result
     expect(result.valueInBase).toEqual(expected)
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -377,7 +377,7 @@ describe('fromBigNumber tests', () => {
     let radix = 2
     let expected = '-11001.1'
     let expectedComplement = '(1)00110.1'
-    let result = BaseConverter.fromBigNumber(input, radix)
+    let result = BaseConverter.fromBigNumber(input, radix).result
     expect(result.valueInBase).toEqual(expected)
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -386,7 +386,7 @@ describe('fromBigNumber tests', () => {
     let radix = 16
     let expected = 'FF.0'
     let expectedComplement = '(0)FF.0'
-    let result = BaseConverter.fromBigNumber(input, radix)
+    let result = BaseConverter.fromBigNumber(input, radix).result
     expect(result.valueInBase).toEqual(expected)
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -395,7 +395,7 @@ describe('fromBigNumber tests', () => {
     let radix = 16
     let expected = 'FF.8'
     let expectedComplement = '(0)FF.8'
-    let result = BaseConverter.fromBigNumber(input, radix)
+    let result = BaseConverter.fromBigNumber(input, radix).result
     expect(result.valueInBase).toEqual(expected)
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -403,14 +403,14 @@ describe('fromBigNumber tests', () => {
 
 describe('fromBaseRepresentation tests', () => {
   it('converts base 10 representation to base 2', () => {
-    let input = BaseConverter.fromBigNumber(new BigNumber(25), 10)
-    let output = BaseConverter.fromBaseRepresentation(input, 2)
+    let input = BaseConverter.fromBigNumber(new BigNumber(25), 10).result
+    let output = BaseConverter.fromBaseRepresentation(input, 2).result
     let expected = '11001.0'
     expect(output.valueInBase).toEqual(expected)
   })
   it('converts base 10 representation to base  with precision', () => {
-    let input = BaseConverter.fromBigNumber(new BigNumber(25.3), 10)
-    let output = BaseConverter.fromBaseRepresentation(input, 2, 15)
+    let input = BaseConverter.fromBigNumber(new BigNumber(25.3), 10).result
+    let output = BaseConverter.fromBaseRepresentation(input, 2, 15).result
     let expected = '11001.01001100110011'
     expect(output.valueInBase).toEqual(expected)
   })
@@ -423,7 +423,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(25)
     let expectedComplement = '(0)25.0'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -433,7 +433,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(-25)
     let expectedComplement = '(9)75.0'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -443,7 +443,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(25.5)
     let expectedComplement = '(0)25.5'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -453,7 +453,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(-25.5)
     let expectedComplement = '(9)74.5'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -463,7 +463,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(255.5)
     let expectedComplement = '(0)255.5'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -473,7 +473,7 @@ describe('fromValueString tests', () => {
     let outputRadix = 10
     let expected = new BigNumber(-255.5)
     let expectedComplement = '(9)744.5'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
   })
@@ -483,8 +483,10 @@ describe('fromValueString tests', () => {
     let outputRadix = 8
     let expected = new BigNumber(25.5)
     let expectedValueStr = '31.4'
-    let result = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let conv = BaseConverter.fromValueString(input, inputRadix, outputRadix)
+    let result = conv.result
     expect(result.valueInDecimal).toEqual(expected)
+    expect(result.radix).toEqual(outputRadix)
     expect(result.valueInBase).toEqual(expectedValueStr)
   })
   it('throws error if valueStr does match input radix', () => {
