@@ -1,6 +1,22 @@
 {
   "extends": [
-    "tslint-config-standard",
+    "tslint:latest",
     "tslint-config-prettier"
-  ]
+  ],
+  "rules": {
+    "max-classes-per-file": [
+      true,
+      5,
+      "exclude-class-expressions"
+    ],
+    "interface-name": [
+      true,
+      "never-prefix"
+    ],
+    "no-bitwise": false,
+    "no-implicit-dependencies": [
+      false
+    ]
+  }
 }
+
