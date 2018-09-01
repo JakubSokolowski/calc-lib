@@ -169,7 +169,6 @@ export class BaseConverter {
         complement
       )
       conv.addStage(new ConversionToDecimal([valueStr, inputBase], inputInDecimal))
-      console.log(conv)
       if (resultBase === 10) {
         return conv
       }
