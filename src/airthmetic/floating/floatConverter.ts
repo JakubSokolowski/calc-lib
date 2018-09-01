@@ -1,5 +1,5 @@
 import { prependZeros } from '../conversionHelpers'
-import { BaseConverter } from '../positional/baseConverter'
+import { fromString } from '../positional/baseConverter'
 
 export enum FloatProperty {
   Normalized,
@@ -70,11 +70,7 @@ export class SingleRepresentation extends FloatingRepresentation {
   }
 
   get mantissaValue() {
-    return BaseConverter.fromValueString(
-      '1.' + this.mantissa,
-      2,
-      10
-    ).result.valueInDecimal.toNumber()
+    return fromString('1.' + this.mantissa, 2, 10).result.valueInDecimal.toNumber()
   }
 }
 
