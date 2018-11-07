@@ -1,4 +1,4 @@
-import { prependZeros } from '../conversionHelpers'
+import { padLeft } from '../conversionHelpers'
 import { fromString } from '../positional/baseConverter'
 
 export enum FloatProperty {
@@ -70,7 +70,7 @@ export class SingleRepresentation extends FloatingRepresentation {
   }
 
   get mantissaValue() {
-    return fromString('1.' + this.mantissa, 2, 10).result.valueInDecimal.toNumber()
+    return fromString('1.' + this.mantissa, 2, 10).result.decimalValue.toNumber()
   }
 }
 
@@ -103,8 +103,8 @@ export class FloatConverter {
     doubleView[0] = d
     let low = (intView[0] >>> 0).toString(2)
     let high = (intView[1] >>> 0).toString(2)
-    low = prependZeros(low, 32)
-    high = prependZeros(high, 32)
+    low = padLeft('0', low, 32)
+    high = padLeft('0', high, 32)
     return high + low
   }
 
@@ -122,7 +122,7 @@ export class FloatConverter {
     const intView = new Int32Array(buffer)
     const floatView = new Float32Array(buffer)
     floatView[0] = f
-    return prependZeros((intView[0] >>> 0).toString(2), 32)
+    return padLeft('0', (intView[0] >>> 0).toString(2), 32)
   }
 
   public static BinaryStringToSingle(s: string): number {
