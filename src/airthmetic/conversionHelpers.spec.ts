@@ -3,51 +3,18 @@ import {
   arbitraryFractionToDecimal,
   arbitraryIntegralToDecimal,
   decimalFractionToArbitrary,
-  decimalIntegralToArbitrary,
+  decimalIntegerToArbitrary,
   getRepresentationRegexPattern,
   isFloatingPointStr,
   isValidString,
-  prependStr,
-  prependZeros,
-  removeTrailingZerosAndSpaces,
+  padLeft,
   removeZeroDigits,
   replaceAll,
-  representationStrToStrList,
-  toDigitLists
+  representationStrToStrArray,
+  splitToDigits,
+  splitToPartsArr
 } from './conversionHelpers'
-
-describe('removeTrailingZerosAndSpaces tests', () => {
-  it('removes trailing zeros and spaces from string', () => {
-    const input = '6235123 00 00 0'
-    const actual = removeTrailingZerosAndSpaces(input)
-    const expected = '6235123'
-    expect(actual).toEqual(expected)
-  })
-  it('removes trailing "." ', () => {
-    const input = '6235123.00'
-    const actual = removeTrailingZerosAndSpaces(input)
-    const expected = '6235123'
-    expect(actual).toEqual(expected)
-  })
-  it('removes trailing "." ', () => {
-    const input = '6235123,00'
-    const actual = removeTrailingZerosAndSpaces(input)
-    const expected = '6235123'
-    expect(actual).toEqual(expected)
-  })
-  it('does not modify string with nothing to remove', () => {
-    const input = '6235123'
-    const actual = removeTrailingZerosAndSpaces(input)
-    const expected = '6235123'
-    expect(actual).toEqual(expected)
-  })
-  it('does not modify empty string', () => {
-    const input = ''
-    const actual = removeTrailingZerosAndSpaces(input)
-    const expected = ''
-    expect(actual).toEqual(expected)
-  })
-})
+import { Digits } from './positional/representations'
 
 describe('removeZeroDigits tests', () => {
   it('removes trailing zero digits from single char digit array', () => {
@@ -86,14 +53,14 @@ describe('representationStrToStrList tests', () => {
   it('returns valid list for sub 36 radix string', () => {
     const input = '7543'
     const radix = 8
-    const actual = representationStrToStrList(input, radix)
+    const actual = representationStrToStrArray(input, radix)
     const expected = ['7', '5', '4', '3']
     expect(actual).toEqual(expected)
   })
   it('throws error when radix is to small', () => {
     const input = '12 24 26 76'
     const radix = 64
-    const actual = representationStrToStrList(input, radix)
+    const actual = representationStrToStrArray(input, radix)
     const expected = ['12', '24', '26', '76']
     expect(actual).toEqual(expected)
   })
@@ -114,35 +81,18 @@ describe('replaceAll tests', () => {
   })
 })
 
-describe('prependZeros tests', () => {
-  it('prepends zeros to the string until the desired length is reached', () => {
-    const input = '1111'
-    const desiredLenght = 8
-    const actual = prependZeros(input, desiredLenght)
-    const expected = '00001111'
-    expect(actual).toEqual(expected)
-  })
-  it('does not modify the string that is longer than desiredLength', () => {
-    const input = '1111'
-    const desiredLenght = 3
-    const actual = prependZeros(input, desiredLenght)
-    const expected = '1111'
-    expect(actual).toEqual(expected)
-  })
-})
-
-describe('prependStr tests', () => {
+describe('padLeft tests', () => {
   it('prepends character to the string until the desired length is reached', () => {
     const input = '1111'
     const desiredLenght = 8
-    const actual = prependStr('1', input, desiredLenght)
+    const actual = padLeft('1', input, desiredLenght)
     const expected = '11111111'
     expect(actual).toEqual(expected)
   })
   it('does not modify the string that is longer than desiredLength', () => {
     const input = '1111'
     const desiredLenght = 3
-    const actual = prependStr('1', input, desiredLenght)
+    const actual = padLeft('1', input, desiredLenght)
     const expected = '1111'
     expect(actual).toEqual(expected)
   })
@@ -217,8 +167,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 2
     const expected = '0'.split('')
     const expectedDivisors: string[] = []
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 25 in base 2', () => {
@@ -226,8 +176,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 2
     const expected = '11001'.split('')
     const expectedDivisors: string[] = ['25', '12', '6', '3', '1']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -25 in base 2', () => {
@@ -235,8 +185,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 2
     const expected = '11001'.split('')
     const expectedDivisors: string[] = ['25', '12', '6', '3', '1']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 255 in base 16', () => {
@@ -244,8 +194,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 16
     const expected = 'FF'.split('')
     const expectedDivisors: string[] = ['255', '15']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -255 in base 16', () => {
@@ -253,8 +203,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 16
     const expected = 'FF'.split('')
     const expectedDivisors = ['255', '15']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for 100 in base 64', () => {
@@ -262,8 +212,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 64
     const expected = '01 36'.split(' ')
     const expectedDivisors = ['100', '1']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
   it('returns correct pattern for -100 in base 64', () => {
@@ -271,8 +221,8 @@ describe('decimalIntegralToArbitrary tests', () => {
     const radix = 64
     const expected = '01 36'.split(' ')
     const expectedDivisors = ['100', '1']
-    const result = decimalIntegralToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    const result = decimalIntegerToArbitrary(input, radix)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedDivisors)
   })
 })
@@ -320,7 +270,7 @@ describe('arbitraryIntegralToDecimal tests', () => {
     const expected = new BigNumber(-100)
     expect(arbitraryIntegralToDecimal(input, radix)).toEqual(expected)
   })
-  it('throws error if valueStr does match input radix', () => {
+  it('throws error if repStr does match input radix', () => {
     const input = 'FF8'
     const inputRadix = 10
     expect(() => {
@@ -333,10 +283,10 @@ describe('decimalFractionToArbitrary tests', () => {
   it('converts 0 fraction to zero digit', () => {
     const input = new BigNumber(0)
     const radix = 2
-    const expected = '0'.split('')
+    const expected: string[] = []
     const expectedFractions: string[] = []
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact binary', () => {
@@ -345,7 +295,7 @@ describe('decimalFractionToArbitrary tests', () => {
     const expected = '11'.split('')
     const expectedFractions: string[] = ['0.75', '0.5']
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 2 with 30 digits precision', () => {
@@ -385,7 +335,7 @@ describe('decimalFractionToArbitrary tests', () => {
       '0.6'
     ]
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact base 16', () => {
@@ -394,7 +344,7 @@ describe('decimalFractionToArbitrary tests', () => {
     const expected = '8'.split('')
     const expectedFractions: string[] = ['0.5']
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 16 with 30 digits precision', () => {
@@ -434,7 +384,7 @@ describe('decimalFractionToArbitrary tests', () => {
       '0.8'
     ]
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to exact base 64', () => {
@@ -443,7 +393,7 @@ describe('decimalFractionToArbitrary tests', () => {
     const expected = '32'.split(' ')
     const expectedFractions: string[] = ['0.5']
     const result = decimalFractionToArbitrary(input, radix)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
   it('converts decimal fraction to base 64 with 15 digits precision', () => {
@@ -468,7 +418,7 @@ describe('decimalFractionToArbitrary tests', () => {
       '0.8'
     ]
     const result = decimalFractionToArbitrary(input, radix, 15)
-    expect(result[0]).toEqual(expected)
+    expect(result[0].digits).toEqual(expected)
     expect(result[1]).toEqual(expectedFractions)
   })
 })
@@ -509,12 +459,12 @@ describe('isFloatingPointStr tests', () => {
   })
 })
 
-describe('toDigitsLists test', () => {
+describe('toDigitsLists tests', () => {
   it('Converts float number to lists of integer and fraction part digits', () => {
     const num = new BigNumber(25.5)
     const expectedIntegral = ['2', '5']
     const expectedFractional = ['5']
-    const result = toDigitLists(num)
+    const result = splitToPartsArr(num)
     expect(result[0]).toEqual(expectedIntegral)
     expect(result[1]).toEqual(expectedFractional)
   })
@@ -522,7 +472,7 @@ describe('toDigitsLists test', () => {
     const num = new BigNumber(25)
     const expectedIntegral = ['2', '5']
     const expectedFractional: string[] = []
-    const result = toDigitLists(num)
+    const result = splitToPartsArr(num)
     expect(result[0]).toEqual(expectedIntegral)
     expect(result[1]).toEqual(expectedFractional)
   })
@@ -530,7 +480,46 @@ describe('toDigitsLists test', () => {
     const num = new BigNumber(-25)
     const expectedIntegral = ['2', '5']
     const expectedFractional: string[] = []
-    const result = toDigitLists(num)
+    const result = splitToPartsArr(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+})
+
+describe('splitToDigits tests', () => {
+  it('Splits floating number to list of its digit parts', () => {
+    const num = new BigNumber(25.5)
+    const base = 10
+    const expectedIntegral = new Digits(['2', '5'], base)
+    const expectedFractional = new Digits(['5'], base)
+    const result = splitToDigits(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+  it('Splits number string to list of its digit parts', () => {
+    const num = '25.5'
+    const base = 10
+    const expectedIntegral = new Digits(['2', '5'], base)
+    const expectedFractional = new Digits(['5'], base)
+    const result = splitToDigits(num)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+  it('Splits number string to list of its digit parts for base > 36', () => {
+    const num = '12 45 23.52'
+    const base = 64
+    const expectedIntegral = new Digits(['12', '45', '23'], base)
+    const expectedFractional = new Digits(['52'], base)
+    const result = splitToDigits(num, base)
+    expect(result[0]).toEqual(expectedIntegral)
+    expect(result[1]).toEqual(expectedFractional)
+  })
+  it('Splits number string to list of its digit parts', () => {
+    const num = 25.5
+    const base = 10
+    const expectedIntegral = new Digits(['2', '5'], base)
+    const expectedFractional = new Digits(['5'], base)
+    const result = splitToDigits(num)
     expect(result[0]).toEqual(expectedIntegral)
     expect(result[1]).toEqual(expectedFractional)
   })
