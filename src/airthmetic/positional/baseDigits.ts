@@ -1,28 +1,47 @@
+/**
+ * Handles conversions digit <-> value for positional systems of different bases
+ */
 export class BaseDigits {
-  public static readonly MAX_RADIX: number = 99
+  public static readonly MAX_BASE: number = 99
   public static readonly defaultDigits: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-  public static isValidRadix(radix: number): boolean {
-    return radix >= 2 && radix <= this.MAX_RADIX
+  /**
+   * Checks whether base is between 2 and MAX_BASE
+   * @param base
+   */
+  public static isValidRadix(base: number): boolean {
+    return base >= 2 && base <= this.MAX_BASE
   }
 
-  public static getDigit(value: number, radix: number): string {
-    if (!this.isValidRadix(radix)) {
-      throw new Error('Radix must be between 2 and ')
+  /**
+   * Returns digit that has specified value in base
+   * @param value
+   * @param base
+   * @example getDigit(10, 16) will return 'A'
+   */
+  public static getDigit(value: number, base: number): string {
+    if (!this.isValidRadix(base)) {
+      throw new Error('Base must be between 2 and ')
     }
-    if (value < radix) {
-      if (radix <= 36) {
+    if (value < base) {
+      if (base <= 36) {
         return this.defaultDigits[value]
       }
       return value < 10 ? '0' + value.toString() : value.toString()
     }
-    throw new Error('The value ' + value + ' is not in range 0 - ' + (radix - 1).toString())
+    throw new Error('The value ' + value + ' is not in range 0 - ' + (base - 1).toString())
   }
 
-  public static getValue(key: string, radix: number): number {
-    if (!this.isValidRadix(radix)) {
+  /**
+   * Returns value of specified digit.
+   * @param digit must be number or uppercase letter
+   * @param base
+   * @example getValue('A', 16) will return 10
+   */
+  public static getValue(digit: string, base: number): number {
+    if (!this.isValidRadix(base)) {
       throw new Error('Radix must be between 2 and ')
     }
-    return radix <= 36 ? this.defaultDigits.indexOf(key) : Number.parseInt(key, 10)
+    return base <= 36 ? this.defaultDigits.indexOf(digit) : Number.parseInt(digit, 10)
   }
 }
