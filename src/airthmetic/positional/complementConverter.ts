@@ -1,123 +1,181 @@
-import { representationStrToStrList } from '../conversionHelpers'
+import { isValidString, splitToDigits } from '../conversionHelpers'
 import { BaseDigits } from './baseDigits'
+import { Digits, NumberComplement } from './representations'
 
-export class BaseComplement {
-  public valueStr: string
-  public prefix: string
-
-  constructor(value: string, prefix: string) {
-    this.valueStr = value
-    this.prefix = prefix
-  }
-
-  public toString(): string {
-    return this.prefix + this.valueStr
-  }
-}
-
+/**
+ * Handles creating number's BaseComplement form it's string representation
+ */
 export class ComplementConverter {
-  public static toDigitList(valueStr: string, radix: number): [string[], number] {
-    const val = ComplementConverter.removeDelimiter(valueStr, radix)
-    let digitList = representationStrToStrList(val[0], radix)
-    digitList = digitList.filter(x => {
-      return x !== ' '
-    })
-    return [digitList, val[1]]
-  }
-
-  public static IsNegative(str: string) {
+  public static isNegative(str: string) {
     return str.charAt(0) === '-'
   }
 
-  public static HasDelimiter(str: string): boolean {
+  /**
+   * Checks whether the sign in front of complement str is negative
+   * @param str
+   * @param base
+   */
+  public static isComplementStrNegative(str: string, base: number = 10) {
+    // Total sign length can be 3 - (9) or 4 (63), in comparision use only
+    // value in between parenthesis
+    const signLength = base > 36 ? 2 : 1
+    const sign = str.substr(1, signLength)
+    return sign === BaseDigits.getDigit(base - 1, base)
+  }
+
+  /**
+   * Check whether given string can be used to represent complement of
+   * a number.
+   * @param str
+   * @param base
+   */
+  public static isValidComplementStr(str: string, base: number): boolean {
+    if (this.hasValidComplementSign(str, base)) {
+      const noSignComplementStr = str.split(')')[1]
+      return isValidString(noSignComplementStr, base)
+    } else {
+      return false
+    }
+  }
+
+  /**
+   * Checks whether given string starts with valid sign
+   * ex. (0) or (9) for base 10
+   * @param str
+   * @param base
+   */
+  public static hasValidComplementSign(str: string, base: number) {
+    const zeroDigit = BaseDigits.getDigit(0, base)
+    const maxDigit = BaseDigits.getDigit(base - 1, base)
+    const regStr = '^(\\(*\\)|\\(#\\)).*'.replace('*', zeroDigit).replace('#', maxDigit)
+    const reg = new RegExp(regStr)
+    return reg.test(str)
+  }
+
+  /**
+   * Checks whether string has delimiter (is floating point string).
+   * Accepts delimiters '.' and ','
+   * @param str
+   */
+  public static hasDelimiter(str: string): boolean {
     return str.includes('.') || str.includes(',')
   }
 
-  public static removeDelimiter(valueStr: string, radix: number): [string, number] {
-    valueStr = valueStr.replace(',', '.')
-    let delimiterIndex = valueStr.indexOf('.')
-    if (delimiterIndex < 0) {
-      delimiterIndex = valueStr.length - 1
+  /**
+   * Computes a complement of a number, represented either by value string or
+   * NumberComplement
+   * @param value value representing a number
+   * @param base base of a input, default value is 10
+   */
+  public static getComplement(
+    value: string | NumberComplement,
+    base: number = 10
+  ): NumberComplement {
+    let val: string = ''
+    if (value instanceof NumberComplement) {
+      val = value.noSignValue()
+      base = value.base
     }
-    valueStr = radix > 36 ? valueStr.replace('.', ' ') : valueStr.replace('.', '')
-    return [valueStr, delimiterIndex]
-  }
-
-  public static restoreDelimiter(str: string, radix: number, index: number): string {
-    if (radix > 36) {
-      str = str.slice(0, index) + str.slice(index + 1)
+    if (typeof value === 'string') {
+      val = value
     }
-    str = str.slice(0, index) + '.' + str.slice(index)
-    return str
-  }
-
-  public static getComplement(valueStr: string, radix: number): BaseComplement {
-    if (ComplementConverter.IsNegative(valueStr)) {
-      return this.getNegativeNumberComplement(valueStr, radix)
+    if (ComplementConverter.isNegative(val)) {
+      return this.getNegativeNumberComplement(val, base)
     } else {
-      return this.getPositiveNumberComplement(valueStr, radix)
+      return this.getPositiveNumberComplement(val, base)
     }
   }
 
-  public static getNegativeNumberComplement(valueStr: string, radix: number): BaseComplement {
-    const prefix = this.getPrefix(valueStr, radix)
-    const noSignValue = valueStr.substr(1)
-    const suffix = this.getSuffix(valueStr, radix)
-
-    const strArr = ComplementConverter.toDigitList(noSignValue, radix)
-    let complement = ComplementConverter.calculateComplement(strArr[0], radix)
-    if (!suffix) {
-      complement = ComplementConverter.restoreDelimiter(complement, radix, strArr[1])
-    }
-    return new BaseComplement(complement + suffix, prefix)
+  /**
+   * Computes complement of a negative number
+   * @param repStr
+   * @param base
+   */
+  public static getNegativeNumberComplement(repStr: string, base: number): NumberComplement {
+    const repParts = splitToDigits(repStr.substr(1), base)
+    const complementDigits = ComplementConverter.computeComplement(repParts[0], repParts[1], base)
+    return new NumberComplement(complementDigits[0], complementDigits[1], base, true)
   }
 
-  public static getPositiveNumberComplement(valueStr: string, radix: number): BaseComplement {
-    const prefix = this.getPrefix(valueStr, radix)
-    const suffix = this.getSuffix(valueStr, radix)
-    return new BaseComplement(valueStr + suffix, prefix)
+  /**
+   * Computes complement of a positive number
+   * @param valueStr
+   * @param base
+   */
+  public static getPositiveNumberComplement(valueStr: string, base: number): NumberComplement {
+    const digits = splitToDigits(valueStr, base)
+    return new NumberComplement(digits[0], digits[1], base, false)
   }
 
-  public static getSuffix(valueStr: string, radix: number): string {
-    if (ComplementConverter.HasDelimiter(valueStr)) {
-      return ''
-    }
-    return '.' + BaseDigits.getDigit(0, radix)
+  /**
+   * Returns complement of a single in some positional system specified by
+   * base
+   * @param digit
+   * @param base
+   */
+  public static getDigitComplement(digit: string, base: number): string {
+    return BaseDigits.getDigit(base - 1 - BaseDigits.getValue(digit, base), base)
   }
 
-  public static getPrefix(valueStr: string, radix: number): string {
-    if (ComplementConverter.IsNegative(valueStr)) {
-      return '(' + BaseDigits.getDigit(radix - 1, radix) + ')'
-    } else {
-      return '(' + BaseDigits.getDigit(0, radix) + ')'
-    }
-  }
-
-  public static getDigitComplement(digit: string, radix: number): string {
-    return BaseDigits.getDigit(radix - 1 - BaseDigits.getValue(digit, radix), radix)
-  }
-
-  public static incrementNumber(digits: string[], radix: number): string {
+  /**
+   * Increments the value of number represented by digit list by 1
+   * @param digits
+   * @param base
+   */
+  public static incrementNumber(digits: string[], base: number): string[] {
     for (let i = digits.length - 1; i >= 0; i--) {
-      const val = BaseDigits.getValue(digits[i], radix)
-      if (val === radix - 1) {
-        digits[i] = BaseDigits.getDigit(0, radix)
+      const val = BaseDigits.getValue(digits[i], base)
+      if (val === base - 1) {
+        digits[i] = BaseDigits.getDigit(0, base)
       } else {
-        digits[i] = BaseDigits.getDigit(val + 1, radix)
+        digits[i] = BaseDigits.getDigit(val + 1, base)
         break
       }
     }
-    if (radix > 36) {
-      return digits.join(' ')
-    } else {
-      return digits.join('')
-    }
+    return digits
   }
 
-  public static calculateComplement(digits: string[], radix: number): string {
+  /**
+   * Computes a complement of a number represented by its integral and fractional
+   * parts digits
+   * @param integral
+   * @param fractional
+   * @param base
+   */
+  public static computeComplement(
+    integral: Digits,
+    fractional: Digits,
+    base: number
+  ): [Digits, Digits] {
+    let digits = integral.digits.concat(fractional.digits)
     for (let i = 0; i < digits.length; i++) {
-      digits[i] = ComplementConverter.getDigitComplement(digits[i], radix)
+      digits[i] = ComplementConverter.getDigitComplement(digits[i], base)
     }
-    return this.incrementNumber(digits, radix)
+    digits = this.incrementNumber(digits, base)
+
+    return [
+      new Digits(digits.slice(0, integral.length), base),
+      new Digits(digits.slice(integral.length, integral.length + fractional.length), base)
+    ]
+  }
+
+  /**
+   * Computes the string representation of a number, given its complement
+   * string
+   * @param str
+   * @param base
+   */
+  public static complementStrToBaseStr(str: string, base: number) {
+    const noSignStr = str.substring(3)
+    let result = ''
+    if (this.isComplementStrNegative(str, base)) {
+      const digits = splitToDigits(noSignStr)
+      const baseDigits = this.computeComplement(digits[0], digits[1], base)
+      const delimiter = baseDigits[1].length === 0 ? '' : '.'
+      result = '-' + baseDigits[0].toString() + delimiter + baseDigits[1].toString()
+    } else {
+      result = noSignStr
+    }
+    return result
   }
 }
