@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import { StandardBaseConverter } from './baseConverter'
+import { fromNumber, StandardBaseConverter } from './baseConverter'
 
 describe('StandardBaseConverter fromNumber tests', () => {
   const BaseConverter = new StandardBaseConverter()
@@ -25,8 +25,8 @@ describe('StandardBaseConverter fromNumber tests', () => {
   it('converts positive base 10 to base 16', () => {
     const input = new BigNumber(255)
     const radix = 16
-    const expected = 'FF.0'
-    const expectedComplement = '(0)FF.0'
+    const expected = 'FF'
+    const expectedComplement = '(0)FF'
     const result = BaseConverter.fromNumber(input, radix).result
     expect(result.valueInBase).toEqual(expected)
     expect(result.complement.toString()).toEqual(expectedComplement)
@@ -57,7 +57,7 @@ describe('StandardBaseConverter fromString tests', () => {
     const inputRadix = 2
     const outputRadix = 10
     const expected = new BigNumber(25)
-    const expectedComplement = '(0)25.0'
+    const expectedComplement = '(0)25'
     const result = BaseConverter.fromString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
@@ -67,7 +67,7 @@ describe('StandardBaseConverter fromString tests', () => {
     const inputRadix = 2
     const outputRadix = 10
     const expected = new BigNumber(-25)
-    const expectedComplement = '(9)75.0'
+    const expectedComplement = '(9)75'
     const result = BaseConverter.fromString(input, inputRadix, outputRadix).result
     expect(result.valueInBase).toEqual(expected.toString())
     expect(result.complement.toString()).toEqual(expectedComplement)
@@ -120,16 +120,46 @@ describe('StandardBaseConverter fromString tests', () => {
     const expectedValueStr = '31.4'
     const conv = BaseConverter.fromString(input, inputRadix, outputRadix)
     const result = conv.result
-    expect(result.valueInDecimal).toEqual(expected)
-    expect(result.radix).toEqual(outputRadix)
+    expect(result.decimalValue).toEqual(expected)
     expect(result.valueInBase).toEqual(expectedValueStr)
+    expect(true).toBeTruthy()
   })
-  it('throws error if valueStr does match input radix', () => {
+  it('throws error if repStr does match input radix', () => {
     const input = '-FF8.923'
     const inputRadix = 10
     const outputRadix = 16
     expect(() => {
       BaseConverter.fromString(input, inputRadix, outputRadix)
     }).toThrow()
+  })
+})
+
+describe('fromNumber tests', () => {
+  it('converts number with variable precision', () => {
+    const input = new BigNumber(25.5)
+    const radix = 2
+    const expected = '11001.1'
+    const expectedComplement = '(0)11001.1'
+    const result = fromNumber(input, radix).result
+    expect(result.valueInBase).toEqual(expected)
+    expect(result.complement.toString()).toEqual(expectedComplement)
+  })
+  it('converts number using StandardBaseConverter', () => {
+    const input = new BigNumber(25.5)
+    const radix = 2
+    const expected = '11001.1'
+    const expectedComplement = '(0)11001.1'
+    const result = fromNumber(input, radix).result
+    expect(result.valueInBase).toEqual(expected)
+    expect(result.complement.toString()).toEqual(expectedComplement)
+  })
+  it('converts number with variable precision', () => {
+    const input = new BigNumber(25.5)
+    const radix = 2
+    const expected = '11001.1'
+    const expectedComplement = '(0)11001.1'
+    const result = fromNumber(input, radix).result
+    expect(result.valueInBase).toEqual(expected)
+    expect(result.complement.toString()).toEqual(expectedComplement)
   })
 })
