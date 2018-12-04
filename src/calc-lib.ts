@@ -2,12 +2,12 @@
 // import "core-js/fn/array.find"
 // ...
 export {
-  BaseRepresentation,
   StandardBaseConverter,
   fromNumber,
   fromString
 } from './airthmetic/positional/baseConverter'
-export { ComplementConverter, BaseComplement } from './airthmetic/positional/complementConverter'
+export { NumberComplement, PositionalNumber } from './airthmetic/positional/representations'
+export { ComplementConverter } from './airthmetic/positional/complementConverter'
 export {
   FloatConverter,
   FloatingRepresentation,

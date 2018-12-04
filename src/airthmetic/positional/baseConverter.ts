@@ -3,52 +3,14 @@ import {
   arbitraryFractionToDecimal,
   arbitraryIntegralToDecimal,
   decimalFractionToArbitrary,
-  decimalIntegralToArbitrary,
+  decimalIntegerToArbitrary,
   isFloatingPointStr,
   isValidString,
-  toDigitLists
+  splitToPartsArr
 } from '../conversionHelpers'
-import { BaseComplement, ComplementConverter } from './complementConverter'
+import { ComplementConverter } from './complementConverter'
+import { PositionalNumber } from './representations'
 
-export class BaseRepresentation {
-  public radix: number = 10
-  public valueInDecimal: BigNumber
-  public complement: BaseComplement
-
-  public integralDigits: string[] = []
-  public fractionalDigits: string[] = []
-
-  constructor(
-    radix: number,
-    valInDecimal: BigNumber,
-    integral: string[],
-    fractional: string[],
-    complement: BaseComplement
-  ) {
-    this.radix = radix
-    this.valueInDecimal = valInDecimal
-    this.integralDigits = integral
-    this.fractionalDigits = fractional
-    this.complement = complement
-  }
-
-  get valueInBase(): string {
-    return (
-      this.sign +
-      this.integralDigits.join(this.radix > 36 ? ' ' : '') +
-      this.delimiter +
-      this.fractionalDigits.join(this.radix > 36 ? ' ' : '')
-    )
-  }
-
-  get sign(): string {
-    return this.valueInDecimal.isNegative() ? '-' : ''
-  }
-
-  get delimiter(): string {
-    return this.fractionalDigits.length ? '.' : ''
-  }
-}
 enum ConversionType {
   DIRECT,
   INDIRECT
@@ -57,7 +19,7 @@ export class Conversion {
   public stages: ConversionStage[] = []
   public type: ConversionType = ConversionType.DIRECT
 
-  get result(): BaseRepresentation {
+  get result(): PositionalNumber {
     return this.stages[this.stages.length - 1].result
   }
 
@@ -77,14 +39,14 @@ export class Conversion {
 }
 interface ConversionStage {
   input: [string, number]
-  result: BaseRepresentation
+  result: PositionalNumber
 }
 
 export class ConversionToDecimal implements ConversionStage {
   public input: [string, number]
-  public result: BaseRepresentation
+  public result: PositionalNumber
 
-  constructor(input: [string, number], result: BaseRepresentation) {
+  constructor(input: [string, number], result: PositionalNumber) {
     this.input = input
     this.result = result
   }
@@ -95,7 +57,7 @@ export class ConversionToArbitrary extends ConversionToDecimal {
 
   constructor(
     input: [string, number],
-    result: BaseRepresentation,
+    result: PositionalNumber,
     divisors: string[],
     multipliers: string[]
   ) {
@@ -107,7 +69,6 @@ export class ConversionToArbitrary extends ConversionToDecimal {
 
 export interface BaseConverter {
   fromNumber(num: number | BigNumber, resultBase: number, precision?: number): Conversion
-
   fromString(
     valueStr: string,
     inputBase: number,
@@ -130,27 +91,29 @@ export class StandardBaseConverter implements BaseConverter {
       decimalValue = num
     }
     const sign = decimalValue.isNegative() ? '-' : ''
-    const fractionVal = decimalValue.mod(1)
-    const integerVal = decimalValue.minus(fractionVal)
-    const integerDigits = decimalIntegralToArbitrary(integerVal, resultBase)
-    const fractionDigits = decimalFractionToArbitrary(fractionVal, resultBase, precision)
-    const repStr =
-      integerDigits[0].join(resultBase > 36 ? ' ' : '') +
-      '.' +
-      fractionDigits[0].join(resultBase > 36 ? ' ' : '')
+    const fractionalPart = decimalValue.mod(1)
+    const integerPart = decimalValue.minus(fractionalPart)
+    const integerPartDigits = decimalIntegerToArbitrary(integerPart, resultBase)
+    const fractionalPartDigits = decimalFractionToArbitrary(fractionalPart, resultBase, precision)
+    const repStr = integerPartDigits[0].toString() + '.' + fractionalPartDigits[0]
     const complement = ComplementConverter.getComplement(sign + repStr, resultBase)
-    const result = new BaseRepresentation(
+    const result = new PositionalNumber(
+      integerPartDigits[0],
+      fractionalPartDigits[0],
       resultBase,
       decimalValue,
-      integerDigits[0],
-      fractionDigits[0],
       complement
     )
-    const conv = new Conversion()
-    conv.addStage(
-      new ConversionToArbitrary([num.toString(), 10], result, integerDigits[1], fractionDigits[1])
+    const conversion = new Conversion()
+    conversion.addStage(
+      new ConversionToArbitrary(
+        [num.toString(), 10],
+        result,
+        integerPartDigits[1],
+        fractionalPartDigits[1]
+      )
     )
-    return conv
+    return conversion
   }
 
   public fromString(
@@ -160,7 +123,7 @@ export class StandardBaseConverter implements BaseConverter {
     precision: number = 30
   ): Conversion {
     if (isValidString(valueStr, inputBase)) {
-      const conv = new Conversion()
+      const conversion = new Conversion()
       let decimalValue = new BigNumber(0)
       if (isFloatingPointStr(valueStr)) {
         const valueParts = valueStr.split('.')
@@ -178,22 +141,22 @@ export class StandardBaseConverter implements BaseConverter {
       const complement = ComplementConverter.getComplement(decimalValue.toString(), resultBase)
       // Split into two str arrays - integral part digits arr and
       // fractional part digits arr
-      const digits = toDigitLists(decimalValue)
-      const inputInDecimal = new BaseRepresentation(
-        10,
-        decimalValue,
+      const digits = splitToPartsArr(decimalValue)
+      const inputInDecimal = new PositionalNumber(
         digits[0],
         digits[1],
+        10,
+        decimalValue,
         complement
       )
-      conv.addStage(new ConversionToDecimal([valueStr, inputBase], inputInDecimal))
+      conversion.addStage(new ConversionToDecimal([valueStr, inputBase], inputInDecimal))
       if (resultBase === 10) {
-        return conv
+        return conversion
       }
-      conv.concatConversion(this.fromNumber(inputInDecimal.valueInDecimal, resultBase))
-      return conv
+      conversion.concatConversion(this.fromNumber(inputInDecimal.decimalValue, resultBase))
+      return conversion
     } else {
-      throw new Error('The string does not match the radix')
+      throw new Error('The string does not match the base')
     }
   }
 }
